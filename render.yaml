@@ -1,0 +1,28 @@
+# Render Blueprint Specification for SOCIOTHON 2026 - IIT Roorkee
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Static Site Deployment on Render
+  - type: web
+    name: ecocampus-iitr-sociothon
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+    envVars:
+      - key: VITE_AZURE_CUSTOM_VISION_ENDPOINT
+        value: https://iitr-sociothon-waste-cv.cognitiveservices.azure.com/
+      - key: VITE_CAMPUS_NAME
+        value: IIT Roorkee
+      - key: VITE_HOSTEL_PILOT
+        value: Govind Bhawan
