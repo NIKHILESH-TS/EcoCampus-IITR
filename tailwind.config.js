@@ -7,34 +7,28 @@ export default {
   theme: {
     extend: {
       colors: {
-        hallmark: {
+        brand: {
           dark: '#0e382f',       // Deep pine green
-          primary: '#155e4b',    // Rich forest emerald
-          light: '#237a63',      // Soft emerald
-          accent: '#c05621',     // Warm terracotta / amber
-          gold: '#d97706',       // Golden amber
-          cream: '#faf8f5',      // Hallmark warm ivory canvas
-          card: '#ffffff',       // Pure card surface
-          muted: '#f0ece4',      // Soft warm stone
-          subtle: '#64748b',     // Balanced slate
-          border: '#e7dfd5',     // Gentle warm border
+          primary: '#155e4b',    // Forest emerald
+          light: '#1f7a62',      // Soft emerald
+          subtle: '#e6f4f0',     // Gentle mint highlight
+          accent: '#b45309',     // Amber
         },
         waste: {
-          organic: '#15803d',    // Green
-          recyclable: '#2563eb', // Blue
-          inorganic: '#475569',  // Grey/Black
-          ewaste: '#d97706',     // Amber/Orange
-          hazardous: '#dc2626',  // Red
+          organic: '#15803d',    // Green (Biodegradable)
+          recyclable: '#2563eb', // Blue (Dry Recyclables)
+          inorganic: '#475569',  // Slate (Non-Recyclable)
+          ewaste: '#d97706',     // Amber/Orange (E-Waste)
+          hazardous: '#dc2626',  // Red (Hazardous / Chemical)
         }
       },
       fontFamily: {
-        serif: ['Georgia', 'Cambria', '"Times New Roman"', 'serif'],
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       boxShadow: {
-        'soft': '0 4px 20px -2px rgba(14, 56, 47, 0.06), 0 2px 6px -1px rgba(14, 56, 47, 0.04)',
-        'lifted': '0 10px 30px -4px rgba(14, 56, 47, 0.12), 0 4px 10px -2px rgba(14, 56, 47, 0.06)',
-        'glow': '0 0 25px rgba(21, 94, 75, 0.25)',
+        'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
       }
     },
   },

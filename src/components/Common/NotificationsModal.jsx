@@ -1,78 +1,82 @@
-import React from 'react';
-import { X, Bell, CheckCircle2, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
-import { store } from '../../services/store';
+import React, { useState, useEffect } from 'react';
+import { Bell, Clock, CheckCircle2 } from 'lucide-react';
+import { db } from '../../services/db';
 
 export default function NotificationsModal({ isOpen, onClose }) {
+  const [dispatches, setDispatches] = useState([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setDispatches(db.getAllDispatches());
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const complaints = store.getComplaints();
-  const acks = complaints.filter(c => c.adminAcknowledgment);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-lifted border border-hallmark-border font-sans max-h-[85vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-5 border border-slate-200 shadow-card text-xs space-y-4 max-h-[85vh] overflow-y-auto">
+        
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-              <Bell className="w-5 h-5" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+              <Bell className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-display font-bold text-base text-slate-900">
-                Official Administrative Notifications
+              <h3 className="font-semibold text-sm text-slate-900">
+                Official Estate Dispatches & Auto-Acks
               </h3>
-              <p className="text-xs text-slate-500">
-                Automated one-way dispatches & status logs
+              <p className="text-[11px] text-slate-500">
+                Automatic one-way status notifications sent to students
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-sm">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xs font-bold">
             ✕
           </button>
         </div>
 
-        <div className="mt-4 space-y-3">
-          {acks.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-400">
-              No notifications yet. File a bin or spot complaint to trigger an automatic one-way update.
+        <div className="space-y-2.5">
+          {dispatches.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 text-xs">
+              No dispatches logged yet.
             </div>
           ) : (
-            acks.map((complaint) => (
-              <div key={complaint.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
-                    {complaint.id}
+            dispatches.map(item => (
+              <div key={item.id} className="p-3 rounded-lg border border-slate-200 bg-slate-50 text-xs space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span className="font-mono font-bold text-slate-800 bg-white px-1.5 py-0.2 rounded border border-slate-200">
+                    Ref: {item.complaintId}
                   </span>
-                  <span className="text-slate-400 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {complaint.adminAcknowledgment.sentAt}
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-slate-400" />
+                    {item.sentAt}
                   </span>
                 </div>
 
-                <div className="text-slate-700 font-medium">
-                  📍 {complaint.location}
+                <div className="bg-emerald-50/90 border border-emerald-200 p-2 rounded text-[11px] font-mono text-emerald-950">
+                  "{item.messageText}"
                 </div>
 
-                <div className="bg-emerald-50/90 p-2.5 rounded-xl border border-emerald-200 text-emerald-950 font-mono text-[11px] leading-relaxed">
-                  "{complaint.adminAcknowledgment.message}"
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
-                  <span>Signatory: <strong>{complaint.adminAcknowledgment.adminOfficer}</strong></span>
-                  <span className="text-emerald-700 font-semibold">✓ Dispatched</span>
+                <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
+                  <span>Assigned: <strong className="text-slate-600">{item.squadAssigned}</strong></span>
+                  <span className="text-emerald-700 font-medium">✓ Delivered</span>
                 </div>
               </div>
             ))
           )}
         </div>
 
-        <div className="mt-6 pt-3 border-t border-slate-100 text-center">
+        <div className="pt-2 border-t border-slate-100 text-center">
           <button
+            type="button"
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl bg-hallmark-primary text-white font-medium text-xs hover:bg-hallmark-dark transition-colors"
+            className="w-full py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors"
           >
-            Close Notification Center
+            Close
           </button>
         </div>
+
       </div>
     </div>
   );

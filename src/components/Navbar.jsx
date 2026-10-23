@@ -1,160 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Leaf, 
-  ShieldCheck, 
-  User, 
-  Coins, 
-  Bell, 
-  RefreshCw, 
-  Sparkles, 
-  LogOut, 
-  Award,
-  Layers
-} from 'lucide-react';
-import { store } from '../services/store';
+import { Leaf, Bell, Shield, User, Coins, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { db } from '../services/db';
 
-export default function Navbar({ currentRole, onRoleChange, onOpenLogin, onOpenNotifications }) {
-  const [user, setUser] = useState(store.getUser());
+export default function Navbar({ currentRole, onRoleChange, onOpenNotifications }) {
+  const [user, setUser] = useState(db.getCurrentUser());
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const handleUpdate = () => {
-      setUser(store.getUser());
-      const complaints = store.getComplaints();
-      const recentAcks = complaints.filter(c => c.adminAcknowledgment && !c.readByStudent).length;
-      setUnreadCount(recentAcks || 2);
+      setUser(db.getCurrentUser());
+      const dispatches = db.getAllDispatches();
+      setUnreadCount(dispatches.length);
     };
 
     handleUpdate();
-    window.addEventListener('iitr_store_update', handleUpdate);
-    return () => window.removeEventListener('iitr_store_update', handleUpdate);
+    window.addEventListener('ecocampus_db_change', handleUpdate);
+    return () => window.removeEventListener('ecocampus_db_change', handleUpdate);
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-hallmark-border shadow-soft">
-      {/* Top micro announcement bar */}
-      <div className="bg-hallmark-dark text-emerald-100/90 text-xs py-1.5 px-4 font-sans border-b border-emerald-900/40">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 font-semibold uppercase tracking-wider">
-              SOCIOTHON 2026
-            </span>
-            <span className="hidden sm:inline">NSS IIT Roorkee • Smart & Sustainable Waste Management Initiative</span>
-            <span className="sm:hidden">IIT Roorkee Smart SWM</span>
-          </div>
+    <header className="sticky top-0 z-30 bg-white border-b border-slate-200">
+      {/* Top Thin Hackathon Bar */}
+      <div className="bg-slate-900 text-slate-300 text-[11px] px-4 py-1.5 flex items-center justify-between font-sans">
+        <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
+          <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-mono font-medium text-[10px]">
+            SOCIOTHON 2026
+          </span>
+          <span className="text-slate-300">IIT Roorkee Smart Waste Management System</span>
+          <span className="text-slate-500 hidden sm:inline">•</span>
+          <span className="text-slate-400 hidden sm:inline">Pilot: Govind Bhawan (200 Dustbins)</span>
 
-          <div className="flex items-center gap-4 text-[11px]">
-            <span className="text-emerald-300/80 hidden md:inline">
-              Empirical Data: MDPI Study 2019 • 5.5 Tonnes/Day Target
-            </span>
-            <button 
+          <div className="ml-auto flex items-center gap-4">
+            <button
               onClick={() => {
-                if (confirm("Reset demo data to default initial state?")) {
-                  store.resetDefaults();
+                if (confirm('Reset database to clean initial state?')) {
+                  db.reset();
                 }
               }}
-              className="inline-flex items-center gap-1 text-emerald-300 hover:text-white transition-colors"
-              title="Reset data for fresh demo"
+              className="text-slate-400 hover:text-slate-200 flex items-center gap-1 text-[10px] transition-colors"
+              title="Reset all complaints and items"
             >
               <RefreshCw className="w-3 h-3" />
-              <span>Reset Demo Data</span>
+              <span>Reset Demo State</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main navigation header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          
-          {/* Brand & Emblem */}
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-hallmark-primary to-hallmark-dark flex items-center justify-center text-white shadow-md ring-2 ring-emerald-600/20">
-              <Leaf className="w-6 h-6 text-emerald-300" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-display font-bold text-xl text-hallmark-dark tracking-tight">
-                  EcoCampus <span className="text-hallmark-primary">IITR</span>
-                </span>
-                <span className="hidden sm:inline-block text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  Govind Bhawan Pilot
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 font-sans -mt-0.5">
-                AI Waste Segregation & Circular Economy Platform
-              </p>
-            </div>
+      {/* Main Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        
+        {/* Brand */}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-brand-dark flex items-center justify-center text-white">
+            <Leaf className="w-4 h-4 text-emerald-400" />
           </div>
-
-          {/* Role Switcher & Student Status pill */}
-          <div className="flex items-center gap-3">
-            
-            {/* Student EcoPoints Badge */}
-            {currentRole === 'student' && (
-              <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50/90 border border-amber-200 text-amber-900 shadow-sm">
-                <div className="w-6 h-6 rounded-full bg-amber-200/80 flex items-center justify-center text-amber-800">
-                  <Coins className="w-3.5 h-3.5" />
-                </div>
-                <div className="text-left">
-                  <div className="text-xs font-bold leading-none">{user.ecoPoints} <span className="font-normal text-[10px]">EcoPoints</span></div>
-                  <div className="text-[10px] text-amber-700 leading-none mt-0.5">{user.wasteDivertedKg} kg waste saved</div>
-                </div>
-              </div>
-            )}
-
-            {/* Quick Demo Switcher Pill */}
-            <div className="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200">
-              <button
-                onClick={() => onRoleChange('student')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  currentRole === 'student'
-                    ? 'bg-white text-hallmark-dark shadow-sm font-semibold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <User className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Student View</span>
-              </button>
-
-              <button
-                onClick={() => onRoleChange('admin')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  currentRole === 'admin'
-                    ? 'bg-hallmark-dark text-white shadow-sm font-semibold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
-                <span>Admin View</span>
-              </button>
+          <div>
+            <div className="font-semibold text-slate-900 text-sm tracking-tight flex items-center gap-2">
+              <span>EcoCampus IITR</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                v2.0
+              </span>
             </div>
-
-            {/* Notifications Button */}
-            <button
-              onClick={onOpenNotifications}
-              className="relative p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors border border-transparent hover:border-slate-200"
-              title="View Administrator Auto-Acknowledgements"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-bounce">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Logout / Switch persona */}
-            <button
-              onClick={onOpenLogin}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-hallmark-border hover:bg-hallmark-muted text-xs font-medium text-slate-700 transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5 text-slate-500" />
-              <span>Switch Login</span>
-            </button>
-
+            <div className="text-[11px] text-slate-500">
+              {currentRole === 'student' ? 'Student Portal • Govind Bhawan' : 'Campus Estate Administration'}
+            </div>
           </div>
         </div>
+
+        {/* Right Tools & Role Switcher */}
+        <div className="flex items-center gap-3">
+          
+          {/* Student EcoPoints Badge */}
+          {currentRole === 'student' && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs">
+              <Coins className="w-3.5 h-3.5 text-emerald-700" />
+              <span className="font-bold font-mono">{user.ecoPointsBalance}</span>
+              <span className="text-[11px] text-emerald-700">EcoPoints</span>
+            </div>
+          )}
+
+          {/* Minimalist Role Switcher */}
+          <div className="bg-slate-100 p-0.5 rounded-lg flex items-center border border-slate-200 text-xs">
+            <button
+              type="button"
+              onClick={() => onRoleChange('student')}
+              className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+                currentRole === 'student'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <User className="w-3 h-3 text-emerald-700" />
+              <span>Student</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onRoleChange('admin')}
+              className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+                currentRole === 'admin'
+                  ? 'bg-brand-dark text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Shield className="w-3 h-3 text-amber-300" />
+              <span>Admin</span>
+            </button>
+          </div>
+
+          {/* Notifications Button */}
+          <button
+            type="button"
+            onClick={onOpenNotifications}
+            className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 border border-slate-200 hover:text-slate-900 transition-colors"
+            title="View One-Way Administrative Acknowledgment Log"
+          >
+            <Bell className="w-4 h-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-600 text-white font-mono text-[9px] font-bold flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+        </div>
+
       </div>
     </header>
   );
