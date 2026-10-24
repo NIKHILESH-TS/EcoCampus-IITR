@@ -74,40 +74,29 @@ export default function StudentRewardsHub() {
   return (
     <div className="space-y-6 font-sans">
       
-      {/* Student Treasury Header */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-sm relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold px-2 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
-                <Landmark className="w-3 h-3 text-emerald-400" />
-                CAMPUS CIRCULAR REWARDS ENGINE
-              </span>
-              <span className="bg-slate-800 text-slate-300 text-[10px] font-mono px-2 py-0.5 rounded">
-                1 Token = ₹{vault.exchangeRateInrPerToken.toFixed(2)} Liquid Backing
-              </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Student Food Subsidy & Canteen Exchange
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Every clean item segregated and every legitimate issue reported converts directly into real purchasing power. Redeem your tokens for Nescafe coffee, night mess meals, or direct bank transfer.
-            </p>
+      {/* Clean Student Treasury Header */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="text-xs text-emerald-700 font-medium">
+            Campus Circular Vault · 1 Token = ₹{vault.exchangeRateInrPerToken.toFixed(2)}
           </div>
-
-          <div className="bg-slate-800/90 border border-slate-700 p-4 rounded-xl min-w-[220px] text-right">
-            <div className="text-[11px] text-slate-400">Your Current Balance</div>
-            <div className="font-mono font-bold text-2xl text-emerald-400 mt-0.5">
-              {user.ecoPointsBalance} <span className="text-xs text-slate-400 font-normal">Tokens</span>
-            </div>
-            <div className="text-[11px] text-slate-300 mt-1">
-              Worth <strong>₹{(user.ecoPointsBalance * vault.exchangeRateInrPerToken).toFixed(2)}</strong> at Campus Counters
-            </div>
-          </div>
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+            Canteen & Nescafe Voucher Pass
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl leading-relaxed">
+            Redeem your EcoTokens for coffee at Nescafe, night canteen meals, or donate directly to Uttarakhand flood relief.
+          </p>
         </div>
 
-        {/* Background glow */}
-        <div className="absolute -top-12 -right-12 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="bg-slate-50 border border-slate-200/80 px-5 py-3.5 rounded-2xl min-w-[200px] sm:text-right">
+          <div className="text-[11px] text-slate-400 font-medium">Available Balance</div>
+          <div className="font-mono font-semibold text-2xl text-slate-900 mt-0.5">
+            {user.ecoPointsBalance} <span className="text-xs text-slate-500 font-sans font-normal">Tokens</span>
+          </div>
+          <div className="text-xs text-emerald-600 font-medium mt-0.5">
+            Worth ₹{(user.ecoPointsBalance * vault.exchangeRateInrPerToken).toFixed(2)}
+          </div>
+        </div>
       </div>
 
       {/* Main Grid: Redemption Form + Flood Relief Drive */}

@@ -89,39 +89,29 @@ export default function RecyclerBiddingPortal() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 font-sans">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6 font-sans">
       
-      {/* Corporate Partner Banner */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-sm relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="bg-blue-500/20 text-blue-300 font-mono text-[11px] font-bold px-2 py-0.5 rounded border border-blue-500/30 flex items-center gap-1">
-                <Building2 className="w-3 h-3 text-blue-400" />
-                VERIFIED B2B RECYCLER TENDER DESK
-              </span>
-              <span className="bg-emerald-500/20 text-emerald-300 font-mono text-[10px] px-2 py-0.5 rounded flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                GSTIN: 05AAACI1234Q1Z2
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Campus Recyclable Commodities & Reverse Auction Hub
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Transparent, competitive bidding for baled high-grade recyclables from IIT Roorkee's 5,500 kg/day waste stream. Highest bid at tender close directly funds student canteen subsidies and worker UPI bonuses.
-            </p>
+      {/* Clean Corporate Partner Header */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="text-xs text-slate-500 font-medium flex items-center gap-2">
+            <span>Verified B2B Tender Desk</span>
+            <span>·</span>
+            <span className="font-mono text-emerald-700">GSTIN: 05AAACI1234Q1Z2</span>
           </div>
-
-          <div className="flex sm:flex-col items-end gap-2 bg-slate-800/80 p-4 rounded-xl border border-slate-700 min-w-[200px]">
-            <div className="text-[11px] text-slate-400">Partner Organization</div>
-            <div className="font-semibold text-white text-sm text-right">ITC Paperboards & Specialty</div>
-            <div className="text-[10px] font-mono text-emerald-400 text-right">Active Credit: ₹5,00,000 Verified</div>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
+            Recyclable Commodities & Reverse Auction
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
+            Competitive bidding for baled dry recyclables from IIT Roorkee. Highest bid at tender close settles directly into the Campus Circular Vault.
+          </p>
         </div>
 
-        {/* Subtle background glow */}
-        <div className="absolute -top-12 -right-12 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 min-w-[210px] sm:text-right">
+          <div className="text-[11px] text-slate-400">Partner Account</div>
+          <div className="font-semibold text-slate-900 text-sm mt-0.5">ITC Paperboards Ltd.</div>
+          <div className="text-xs font-mono text-emerald-600 mt-0.5">Credit Line: ₹5,00,000</div>
+        </div>
       </div>
 
       {notification && (
