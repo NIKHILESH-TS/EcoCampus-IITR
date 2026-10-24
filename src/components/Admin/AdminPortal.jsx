@@ -12,20 +12,25 @@ import {
   Truck,
   HeartHandshake,
   Navigation,
-  Sparkles
+  Sparkles,
+  Cpu,
+  Trophy,
+  Printer
 } from 'lucide-react';
 import { db, SHIFT_TIMINGS, WASTE_TYPES } from '../../services/db';
 import { WasteBadge, FillStatusBadge, ComplaintBadge } from '../Common/Badges';
 import RouteOptimizer from '../Collection/RouteOptimizer';
 import WasteMonitoringDashboard from '../Analytics/WasteMonitoringDashboard';
+import IoTSensorSimulator from '../IoT/IoTSensorSimulator';
+import FieldCrewPortal from '../Crew/FieldCrewPortal';
+import GreenBhawanLeaderboard from '../Leaderboard/GreenBhawanLeaderboard';
 
-export default function AdminPortal() {
-  const [activeTab, setActiveTab] = useState('complaints'); // 'complaints' | 'bins' | 'routing' | 'monitoring' | 'market_audit'
+export default function AdminPortal({ onOpenPrintQr }) {
+  const [activeTab, setActiveTab] = useState('complaints'); 
+  // 'complaints' | 'bins' | 'routing' | 'crew_sla' | 'iot_sim' | 'monitoring' | 'leaderboard'
+  
   const [bins, setBins] = useState([]);
   const [complaints, setComplaints] = useState([]);
-  const [marketItems, setMarketItems] = useState([]);
-  
-  // Filters for Bins
   const [selectedBlock, setSelectedBlock] = useState('All');
   const [searchBin, setSearchBin] = useState('');
   
@@ -42,7 +47,6 @@ export default function AdminPortal() {
   const loadData = () => {
     setBins(db.getBins());
     setComplaints(db.getComplaints());
-    setMarketItems(db.getMarketplaceItems());
   };
 
   const overflowingCount = bins.filter(b => b.status === 'Overflowing' || b.fillLevel > 80).length;
@@ -53,7 +57,7 @@ export default function AdminPortal() {
   };
 
   const handleDispatchSquad = (complaint) => {
-    const msg = customDispatchNote || `[Estate Office Dispatch] Sanitation Cart #2 dispatched to ${complaint.locationText}. Waste removal prioritized.`;
+    const msg = customDispatchNote || `[Estate Office Dispatch] Sanitation Cart #2 dispatched to ${complaint.locationText}. Clearance prioritized.`;
     db.updateComplaintStatus(complaint.id, 'in_progress', msg);
     setSelectedComplaint(null);
     setCustomDispatchNote('');
@@ -81,28 +85,38 @@ export default function AdminPortal() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] font-bold bg-brand-dark text-white px-2 py-0.5 rounded">
-                IITR ESTATE SWM DESK
+                IITR ESTATE SWM COMMAND
               </span>
-              <span className="text-xs text-slate-500 font-medium">Govind Bhawan Pilot & Campus Fleet</span>
+              <span className="text-xs text-slate-500 font-medium">Govind Bhawan Pilot (200 Bins) & Campus Fleet</span>
             </div>
             <h2 className="text-base font-semibold text-slate-900 mt-1">
-              Campus Solid Waste Operations, Routing & Dispatch Console
+              Operations, Telemetry, Routing & SLA Console
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onOpenPrintQr}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-medium text-slate-700 flex items-center gap-1.5 transition-colors"
+              title="Print QR label stickers for bins"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <span>Print 200 QR Stickers</span>
+            </button>
+
             <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs">
-              <span className="text-slate-500">Daily Campus Waste:</span>
-              <strong className="ml-1 text-slate-900 font-mono">5,500 kg</strong>
+              <span className="text-slate-500">Campus Waste:</span>
+              <strong className="ml-1 text-slate-900 font-mono">5,500 kg/day</strong>
             </div>
             <div className="bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg text-xs">
               <span className="text-rose-700">Urgent Bins:</span>
-              <strong className="ml-1 text-rose-900 font-mono">{overflowingCount} Units</strong>
+              <strong className="ml-1 text-rose-900 font-mono">{overflowingCount}</strong>
             </div>
           </div>
         </div>
 
-        {/* Tab Controls across the 4 Problem Domains */}
+        {/* Tab Controls */}
         <div className="flex flex-wrap gap-1 mt-4 text-xs">
           <button
             type="button"
@@ -114,7 +128,7 @@ export default function AdminPortal() {
             }`}
           >
             <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-            <span>Complaints & Auto-Ack ({complaints.length})</span>
+            <span>Complaints ({complaints.length})</span>
             {pendingComplaintsCount > 0 && (
               <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">
                 {pendingComplaintsCount}
@@ -132,7 +146,7 @@ export default function AdminPortal() {
             }`}
           >
             <Trash2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Govind Bhawan 200 Bins</span>
+            <span>200 Bins Fleet</span>
           </button>
 
           <button
@@ -145,7 +159,33 @@ export default function AdminPortal() {
             }`}
           >
             <Truck className="w-3.5 h-3.5 text-blue-400" />
-            <span>Route Optimization (Domain 2)</span>
+            <span>Route Optimization</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('crew_sla')}
+            className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
+              activeTab === 'crew_sla'
+                ? 'bg-slate-900 text-white font-semibold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Crew Verification & SLA</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('iot_sim')}
+            className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
+              activeTab === 'iot_sim'
+                ? 'bg-slate-900 text-white font-semibold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Cpu className="w-3.5 h-3.5 text-purple-400" />
+            <span>IoT Hardware Simulator</span>
           </button>
 
           <button
@@ -157,31 +197,31 @@ export default function AdminPortal() {
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <BarChart3 className="w-3.5 h-3.5 text-purple-400" />
-            <span>Monitoring & Forecasts (Domain 4)</span>
+            <BarChart3 className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Analytics & Forecasts</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('market_audit')}
+            onClick={() => setActiveTab('leaderboard')}
             className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
-              activeTab === 'market_audit'
+              activeTab === 'leaderboard'
                 ? 'bg-slate-900 text-white font-semibold'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <HeartHandshake className="w-3.5 h-3.5 text-amber-400" />
-            <span>Community Re-Use Audit ({marketItems.length})</span>
+            <Trophy className="w-3.5 h-3.5 text-amber-500" />
+            <span>Hostel Trophy Audit</span>
           </button>
         </div>
       </div>
 
-      {/* TAB 1: Live Complaints & Dispatch Console */}
+      {/* TAB 1: Complaints Queue */}
       {activeTab === 'complaints' && (
         <div className="space-y-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <h3 className="font-semibold text-slate-900 text-sm">
-              Student Complaints & Official One-Way Dispatch Queue
+              Student Complaints & Official Dispatch Queue
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               Review issues reported by students, dispatch sanitation squad carts, and deliver automatic or customized one-way status updates.
@@ -224,11 +264,10 @@ export default function AdminPortal() {
                     </div>
                   </div>
 
-                  {/* Sent One-Way Auto Acknowledgment History */}
                   {dispatches.length > 0 && (
                     <div className="space-y-1">
                       <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
-                        One-Way Dispatch Messages Sent to Student:
+                        One-Way Dispatch Messages Delivered:
                       </span>
                       {dispatches.map(d => (
                         <div key={d.id} className="bg-emerald-50 border border-emerald-200 p-2 rounded text-[11px] text-emerald-950 font-mono">
@@ -239,7 +278,6 @@ export default function AdminPortal() {
                     </div>
                   )}
 
-                  {/* Actions */}
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
                     {complaint.status !== 'resolved' && (
                       <>
@@ -335,16 +373,12 @@ export default function AdminPortal() {
                 <tbody className="divide-y divide-slate-100">
                   {filteredBins.slice(0, 30).map(b => (
                     <tr key={b.id} className="hover:bg-slate-50/70">
-                      <td className="p-3 pl-4 font-mono font-bold text-slate-900">
-                        #{b.id}
-                      </td>
+                      <td className="p-3 pl-4 font-mono font-bold text-slate-900">#{b.id}</td>
                       <td className="p-3">
                         <div className="font-medium text-slate-800">{b.block}</div>
                         <div className="text-[10px] text-slate-400">{b.floor}</div>
                       </td>
-                      <td className="p-3">
-                        <WasteBadge category={b.category} />
-                      </td>
+                      <td className="p-3"><WasteBadge category={b.category} /></td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden">
@@ -359,12 +393,8 @@ export default function AdminPortal() {
                           <span className="font-mono text-[10px]">{b.fillLevel}%</span>
                         </div>
                       </td>
-                      <td className="p-3 font-mono text-slate-700">
-                        {b.nextShiftTime}
-                      </td>
-                      <td className="p-3">
-                        <FillStatusBadge status={b.status} fillLevel={b.fillLevel} />
-                      </td>
+                      <td className="p-3 font-mono text-slate-700">{b.nextShiftTime}</td>
+                      <td className="p-3"><FillStatusBadge status={b.status} fillLevel={b.fillLevel} /></td>
                       <td className="p-3 pr-4 text-right">
                         {b.fillLevel > 30 ? (
                           <button
@@ -383,69 +413,24 @@ export default function AdminPortal() {
                 </tbody>
               </table>
             </div>
-
-            <div className="p-3 bg-slate-50 border-t border-slate-100 text-slate-500 text-[11px] flex justify-between px-4">
-              <span>Showing 30 of {filteredBins.length} bins</span>
-              <span>Total Govind Bhawan Pilot: 200 Units</span>
-            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: Route Optimization (Domain 2) */}
+      {/* TAB 3: Route Optimization */}
       {activeTab === 'routing' && <RouteOptimizer />}
 
-      {/* TAB 4: Data-Driven Waste Monitoring & Forecasts (Domain 4) */}
+      {/* TAB 4: Field Crew Verification & SLA */}
+      {activeTab === 'crew_sla' && <FieldCrewPortal />}
+
+      {/* TAB 5: IoT Sensor Hardware Simulator */}
+      {activeTab === 'iot_sim' && <IoTSensorSimulator />}
+
+      {/* TAB 6: Analytics & Forecasting */}
       {activeTab === 'monitoring' && <WasteMonitoringDashboard />}
 
-      {/* TAB 5: Community Re-Use Audit */}
-      {activeTab === 'market_audit' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <h3 className="font-semibold text-slate-900 text-sm">
-              Govind Bhawan Community Re-Use Audit
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Monitor circular economy activity, items saved from move-out trash, and student EcoPoints circulation.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden text-xs">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase text-[10px]">
-                <tr>
-                  <th className="p-3 pl-4">Item ID</th>
-                  <th className="p-3">Title</th>
-                  <th className="p-3">Seller</th>
-                  <th className="p-3">Condition</th>
-                  <th className="p-3">Price</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3 pr-4">Claimed By</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {marketItems.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50/70">
-                    <td className="p-3 pl-4 font-mono font-bold text-slate-900">{item.id}</td>
-                    <td className="p-3 font-medium text-slate-800">{item.title}</td>
-                    <td className="p-3 text-slate-600">{item.sellerName} ({item.sellerRoom.split(',')[1]})</td>
-                    <td className="p-3 capitalize">{item.condition}</td>
-                    <td className="p-3 font-mono font-semibold">{item.isFree ? 'FREE' : `${item.ecoPointsPrice} Pts`}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
-                        item.status === 'claimed' ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      }`}>
-                        {item.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="p-3 pr-4 text-slate-600">{item.claimedBy || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      {/* TAB 7: Inter-Hostel Leaderboard */}
+      {activeTab === 'leaderboard' && <GreenBhawanLeaderboard />}
 
       {/* Dispatch Modal */}
       {selectedComplaint && (
@@ -457,9 +442,7 @@ export default function AdminPortal() {
                 <Truck className="w-4 h-4 text-emerald-700" />
                 <span>Dispatch Sanitation Squad • {selectedComplaint.id}</span>
               </div>
-              <button onClick={() => setSelectedComplaint(null)} className="text-slate-400 hover:text-slate-700 text-xs font-bold">
-                ✕
-              </button>
+              <button onClick={() => setSelectedComplaint(null)} className="text-slate-400 hover:text-slate-700 text-xs font-bold">✕</button>
             </div>
 
             <div className="space-y-3">

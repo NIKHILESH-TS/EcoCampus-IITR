@@ -1,24 +1,24 @@
-// ElevenLabs Voice AI Integration Service for SOCIOTHON 2026
-// Powers EcoVoice AI Assistant & Spoken Waste Segregation Guidance
-// Supports direct ElevenLabs API with API key + Browser Speech fallback for 100% demo reliability
+// ElevenLabs Bilingual Voice AI Integration Service for SOCIOTHON 2026
+// Powers EcoVoice AI Assistant & Bilingual Spoken Guidance (English & Hindi)
+// Supports direct ElevenLabs API + Multilingual V2 Model + Web Speech fallback
 
 const ELEVENLABS_STORAGE_KEY = 'ecocampus_elevenlabs_config';
 
 export const ELEVENLABS_VOICES = [
-  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', description: 'Calm, natural & professional (Female)', accent: 'American' },
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', description: 'Deep, confident & authoritative (Male)', accent: 'American' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', description: 'Warm, clear & empathetic (Female)', accent: 'American' },
-  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni', description: 'Friendly, youthful & engaging (Male)', accent: 'American' },
-  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', description: 'Crisp narration (Male)', accent: 'American' },
+  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', description: 'Calm, natural female (Multilingual)', accent: 'English/Hindi' },
+  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', description: 'Deep, clear male (Multilingual)', accent: 'English/Hindi' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', description: 'Warm, empathetic female', accent: 'English/Hindi' },
+  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni', description: 'Friendly, youthful male', accent: 'English/Hindi' },
+  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', description: 'Crisp narration male', accent: 'English/Hindi' },
 ];
 
 export const DEFAULT_ELEVENLABS_CONFIG = {
   apiKey: '', // Users can paste their hackathon credit API key
   voiceId: '21m00Tcm4TlvDq8ikWAM', // Rachel
-  modelId: 'eleven_monolingual_v1',
+  modelId: 'eleven_multilingual_v2', // Multilingual V2 for seamless Hindi & English
   stability: 0.5,
   similarityBoost: 0.75,
-  useFallbackWhenEmpty: true
+  language: 'en' // 'en' | 'hi'
 };
 
 export function getElevenLabsConfig() {
@@ -42,17 +42,12 @@ export function saveElevenLabsConfig(config) {
 let activeAudio = null;
 
 /**
- * Speaks text using ElevenLabs API with fallback to Web Speech API
- * @param {string} text - Text to be spoken
- * @param {Function} onStart - Callback when audio playback starts
- * @param {Function} onEnd - Callback when audio playback ends
- * @returns {Promise<boolean>}
+ * Speaks text using ElevenLabs Multilingual V2 with fallback to Web Speech
  */
-export async function speakText(text, onStart = () => {}, onEnd = () => {}) {
-  // Stop any currently playing audio
+export async function speakText(text, onStart = () => {}, onEnd = () => {}, forcedLang = null) {
   stopSpeaking();
-
   const config = getElevenLabsConfig();
+  const currentLang = forcedLang || config.language || 'en';
 
   // If user provided a live ElevenLabs API Key, call ElevenLabs REST endpoint
   if (config.apiKey && config.apiKey.trim().length > 10) {
@@ -66,7 +61,7 @@ export async function speakText(text, onStart = () => {}, onEnd = () => {}) {
         },
         body: JSON.stringify({
           text: text,
-          model_id: config.modelId || 'eleven_monolingual_v1',
+          model_id: 'eleven_multilingual_v2',
           voice_settings: {
             stability: config.stability || 0.5,
             similarity_boost: config.similarityBoost || 0.75
@@ -86,13 +81,11 @@ export async function speakText(text, onStart = () => {}, onEnd = () => {}) {
           activeAudio = null;
         };
         activeAudio.onerror = () => {
-          fallbackWebSpeech(text, onStart, onEnd);
+          fallbackWebSpeech(text, onStart, onEnd, currentLang);
         };
 
         await activeAudio.play();
         return true;
-      } else {
-        console.warn('ElevenLabs API returned error status:', response.status, await response.text());
       }
     } catch (err) {
       console.warn('ElevenLabs API fetch error, falling back to Web Speech:', err);
@@ -100,10 +93,10 @@ export async function speakText(text, onStart = () => {}, onEnd = () => {}) {
   }
 
   // Reliable Fallback: Native Web Speech API
-  return fallbackWebSpeech(text, onStart, onEnd);
+  return fallbackWebSpeech(text, onStart, onEnd, currentLang);
 }
 
-function fallbackWebSpeech(text, onStart, onEnd) {
+function fallbackWebSpeech(text, onStart, onEnd, lang = 'en') {
   if (!('speechSynthesis' in window)) {
     console.warn('Speech synthesis not supported in this browser.');
     onEnd();
@@ -112,12 +105,12 @@ function fallbackWebSpeech(text, onStart, onEnd) {
 
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1.0;
-  utterance.pitch = 1.02;
+  utterance.rate = 0.95;
+  utterance.pitch = 1.0;
+  utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
 
-  // Attempt to select a clean English voice
   const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(v => v.lang.includes('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+  const preferred = voices.find(v => (lang === 'hi' ? v.lang.includes('hi') : v.lang.includes('en')));
   if (preferred) utterance.voice = preferred;
 
   utterance.onstart = () => onStart();
@@ -139,62 +132,83 @@ export function stopSpeaking() {
   }
 }
 
-/**
- * Knowledge Base Q&A logic for the EcoVoice AI Agent
- */
-export const ECOVOICE_KNOWLEDGE_BASE = [
-  {
-    keywords: ['maggi', 'wrapper', 'packet', 'chips', 'foil', 'biscuit', 'kurkure', 'plastic pouch'],
-    question: 'How do I dispose of a Maggi or chip wrapper?',
-    answer: 'Multilayer plastic wrappers like Maggi or chip packets are non-recyclable inert waste. Please dispose of them in the Grey Non-Recyclable Bin. At IIT Roorkee, these are sent to the Refuse Derived Fuel unit or engineered sanitary landfill.'
-  },
-  {
-    keywords: ['bottle', 'pet bottle', 'water bottle', 'cold drink', 'coca cola', 'plastic bottle'],
-    question: 'Where should I throw an empty plastic bottle?',
-    answer: 'Plastic beverage bottles belong in the Blue Recyclable Bin. Please empty any remaining liquid and crush the bottle slightly before dropping it in. They are collected by our authorized recycling vendors for secondary pelletization.'
-  },
-  {
-    keywords: ['timing', 'shift', 'schedule', 'when cleaned', 'cleaning time', 'govind timings', 'morning shift'],
-    question: 'What are the cleaning shift timings for Govind Bhawan?',
-    answer: 'Govind Bhawan has three daily cleaning shifts: Morning Shift at 07:30 AM for rooms and mess preparation; Afternoon Shift at 02:00 PM for corridor recyclables; and Evening Shift at 08:30 PM for mess and common areas.'
-  },
-  {
-    keywords: ['banana', 'apple', 'food', 'mess', 'leftover', 'roti', 'rice', 'fruit', 'peel', 'vegetable'],
-    question: 'Where do food scraps and mess leftovers go?',
-    answer: 'Food leftovers and fruit peels belong exclusively in the Green Bio-Degradable Bin. They are transported directly to IIT Roorkees on-campus anaerobic bio-digester, generating clean biogas for cooking and rich organic manure.'
-  },
-  {
-    keywords: ['book', 'textbook', 'notes', 'points', 'sell', 'give away', 'trade', 'kreyszig'],
-    question: 'How do I earn EcoPoints for my old engineering books?',
-    answer: 'Go to the Govind Bhawan Re-Use tab and click "List Item". Academic textbooks receive 60 base points plus a 15-point academic utility bonus! Other Govind Bhawan students can claim them, preventing move-out trash.'
-  },
-  {
-    keywords: ['battery', 'charger', 'cable', 'earphone', 'laptop', 'circuit', 'e-waste', 'wire'],
-    question: 'How do I dispose of broken electronics or batteries?',
-    answer: 'Discarded electronics, USB cords, and batteries belong in the Orange E-Waste Bin. Never throw them into regular hostel bins. They are safely handled by the IIT Roorkee E-Waste Extraction Cell under the 2016 e-waste rules.'
-  },
-  {
-    keywords: ['chemical', 'glass', 'flask', 'acid', 'lab', 'broken glass'],
-    question: 'Where do lab chemicals and broken glassware belong?',
-    answer: 'Broken glass and chemical containers belong in the Red Hazardous Bin. Do not handle broken shards bare-handed. They are neutralized and autoclaved by the campus bio-medical and safety disposal cell.'
-  },
-  {
-    keywords: ['complaint', 'overflow', 'uncleaned', 'report', 'dog', 'odor'],
-    question: 'How do I report an uncleaned or overflowing bin?',
-    answer: 'In the Complaints tab, find your dustbin by ID or block and click "Report Issue". You will immediately receive an official one-way administrative acknowledgment confirming crew dispatch, plus 15 EcoPoints reward!'
-  }
-];
+// Bilingual Knowledge Base
+export const BILINGUAL_KNOWLEDGE_BASE = {
+  en: [
+    {
+      keywords: ['maggi', 'wrapper', 'packet', 'chips', 'foil', 'pouch'],
+      question: 'Where do I dispose of a Maggi or chip wrapper?',
+      answer: 'Multilayer plastic wrappers like Maggi packets belong in the Grey Non-Recyclable Bin. At IIT Roorkee, these are sent to the Refuse Derived Fuel unit or engineered sanitary landfill.'
+    },
+    {
+      keywords: ['bottle', 'pet bottle', 'water bottle', 'coke', 'plastic'],
+      question: 'Where should I throw an empty plastic bottle?',
+      answer: 'This plastic bottle should be placed in the Blue Recyclable Bin. Please empty any liquid and crush it slightly. It will be collected by our authorized recycling vendor network.'
+    },
+    {
+      keywords: ['timing', 'shift', 'schedule', 'cleaning time', 'govind'],
+      question: 'What are the cleaning shift timings for Govind Bhawan?',
+      answer: 'Govind Bhawan has three daily cleaning shifts: Morning Shift at 07:30 AM for rooms and mess preparation; Afternoon Shift at 02:00 PM for corridor recyclables; and Evening Shift at 08:30 PM for mess and common areas.'
+    },
+    {
+      keywords: ['banana', 'apple', 'food', 'mess', 'leftover', 'peel'],
+      question: 'Where do food scraps and mess leftovers go?',
+      answer: 'Food leftovers and fruit peels belong exclusively in the Green Bio-Degradable Bin. They are transported directly to IIT Roorkees on-campus anaerobic bio-digester, generating clean methane fuel and organic manure.'
+    },
+    {
+      keywords: ['battery', 'charger', 'cable', 'earphone', 'laptop', 'e-waste'],
+      question: 'How do I dispose of broken electronics or batteries?',
+      answer: 'Discarded electronics and chargers belong in the Orange E-Waste Bin. Never throw them into regular hostel bins. They are handled by the IIT Roorkee E-Waste Cell under the 2016 rules.'
+    }
+  ],
+  hi: [
+    {
+      keywords: ['प्लास्टिक', 'बोतल', 'पानी', 'कचरा', 'bottle', 'plastic'],
+      question: 'प्लास्टिक की खाली बोतल कहाँ फेंकें?',
+      answer: 'यह प्लास्टिक की बोतल नीले डस्टबिन (सूखा कचरा) में डालें। इसे कबाड़ीवाला नेटवर्क द्वारा रिसाइकिल किया जाएगा।'
+    },
+    {
+      keywords: ['खाना', 'गीला', 'सब्जी', 'फल', 'मेस', 'food', 'mess'],
+      question: 'बचा हुआ भोजन और फलों के छिलके कहाँ डालें?',
+      answer: 'गीला कचरा और भोजन के अवशेष केवल हरे डस्टबिन (बायो-डिग्रेडेबल) में डालें। इसे सीधे आईआईटी रुड़की के बायोगैस प्लांट और खाद बनाने की इकाई में भेजा जाएगा।'
+    },
+    {
+      keywords: ['समय', 'शिफ्ट', 'सफाई', 'टाइमिंग', 'timing', 'shift', 'govind'],
+      question: 'गोविंद भवन में डस्टबिन की सफाई का क्या समय है?',
+      answer: 'गोविंद भवन में सफाई के तीन दैनिक समय हैं: सुबह 7:30 बजे कमरों और मेस की सफाई, दोपहर 2:00 बजे कॉरिडोर के सूखे कचरे की सफाई, और रात 8:30 बजे मेस और लॉन की सफाई।'
+    },
+    {
+      keywords: ['मैगी', 'चिप्स', 'रैपर', 'पैकेट', 'wrapper', 'chips'],
+      question: 'चिप्स या मैगी का रैपर किस डस्टबिन में जाएगा?',
+      answer: 'चिप्स और नमकीन के बहुपरतीय पैकेट धूसर (ग्रे) डस्टबिन में डालें। यह नॉन-रिसाइकिलेबल कचरा है जिसे लैंडफिल या ईंधन ब्रिकेट में इस्तेमाल किया जाता है।'
+    },
+    {
+      keywords: ['बैटरी', 'चार्जर', 'तार', 'मोबाइल', 'इलेक्ट्रॉनिक', 'battery', 'charger'],
+      question: 'खराब चार्जर, बैटरी और बिजली के तार कहाँ डालें?',
+      answer: 'ई-कचरा जैसे खराब चार्जर और बैटरी नारंगी (ऑरेंज) डस्टबिन में डालें। इसे कभी भी साधारण कचरे में न मिलाएं।'
+    }
+  ]
+};
 
-export function queryEcoVoice(userQuery) {
+export function queryEcoVoiceBilingual(userQuery, lang = 'en') {
   const clean = userQuery.toLowerCase();
-  for (const item of ECOVOICE_KNOWLEDGE_BASE) {
+  const kb = BILINGUAL_KNOWLEDGE_BASE[lang] || BILINGUAL_KNOWLEDGE_BASE.en;
+  
+  for (const item of kb) {
     if (item.keywords.some(k => clean.includes(k))) {
       return item;
     }
   }
-  // Default general answer
+
+  if (lang === 'hi') {
+    return {
+      question: userQuery,
+      answer: 'आईआईटी रुड़की में 5 प्रकार के डस्टबिन हैं: हरा (गीला कचरा), नीला (सूखा रिसाइकिलेबल), ग्रे (नॉन-रिसाइकिलेबल), नारंगी (ई-कचरा), और लाल (खतरनाक रसायन व कांच)। कृपया सही डस्टबिन का उपयोग करें।'
+    };
+  }
+
   return {
     question: userQuery,
-    answer: 'EcoCampus IIT Roorkee segregates waste into 5 streams: Green for bio-degradable organic waste, Blue for dry recyclables like paper and plastic, Grey for non-recyclable packaging, Orange for e-waste, and Red for hazardous glass and lab materials. You can also file a complaint or trade reusable items in Govind Bhawan!'
+    answer: 'EcoCampus IIT Roorkee segregates waste into 5 streams: Green (Bio), Blue (Recyclable), Grey (Inert), Orange (E-Waste), and Red (Hazardous). Please use the correct bin!'
   };
 }

@@ -9,16 +9,15 @@ import {
   Settings, 
   X, 
   Send, 
-  ChevronDown, 
-  ChevronUp, 
   Radio,
-  CheckCircle2
+  CheckCircle2,
+  Languages
 } from 'lucide-react';
 import { 
   speakText, 
   stopSpeaking, 
-  queryEcoVoice, 
-  ECOVOICE_KNOWLEDGE_BASE, 
+  queryEcoVoiceBilingual, 
+  BILINGUAL_KNOWLEDGE_BASE, 
   getElevenLabsConfig, 
   saveElevenLabsConfig, 
   ELEVENLABS_VOICES 
@@ -28,6 +27,8 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [language, setLanguage] = useState('en'); // 'en' | 'hi'
+
   const [conversation, setConversation] = useState([
     {
       sender: 'agent',
@@ -51,13 +52,12 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
   }, [conversation]);
 
   useEffect(() => {
-    // Setup Speech Recognition if available
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = false;
-      recognition.lang = 'en-IN';
+      recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
@@ -76,9 +76,28 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
       stopSpeaking();
       if (recognitionRef.current) recognitionRef.current.abort();
     };
-  }, []);
+  }, [language]);
 
   if (!isOpen) return null;
+
+  const handleToggleLanguage = (newLang) => {
+    stopSpeaking();
+    setLanguage(newLang);
+    const greeting = newLang === 'hi'
+      ? 'नमस्ते! मैं इको-वॉयस एआई (EcoVoice AI) हूँ। सफाई कर्मियों और छात्रों के लिए 11Labs द्वारा संचालित। आप मुझसे किसी भी कचरे के सही डस्टबिन या गोविंद भवन के सफाई समय के बारे में पूछ सकते हैं।'
+      : 'Hello! I am EcoVoice AI, IIT Roorkee’s smart sustainability assistant powered by ElevenLabs. Ask me where to dispose of any item, about Govind Bhawan cleaning shifts, or how to earn EcoPoints!';
+    
+    setConversation(prev => [
+      ...prev,
+      {
+        sender: 'agent',
+        text: greeting,
+        timestamp: 'Just now'
+      }
+    ]);
+
+    speakText(greeting, () => setIsSpeaking(true), () => setIsSpeaking(false), newLang);
+  };
 
   const handleToggleMic = () => {
     if (!recognitionRef.current) {
@@ -92,6 +111,7 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
     } else {
       stopSpeaking();
       try {
+        recognitionRef.current.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
         recognitionRef.current.start();
         setIsListening(true);
       } catch (err) {
@@ -104,14 +124,13 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
     const text = textToSend.trim();
     if (!text) return;
 
-    // Add user message
     const userMsg = {
       sender: 'user',
       text: text,
       timestamp: 'Just now'
     };
 
-    const answerData = queryEcoVoice(text);
+    const answerData = queryEcoVoiceBilingual(text, language);
     const agentMsg = {
       sender: 'agent',
       text: answerData.answer,
@@ -125,7 +144,8 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
     speakText(
       answerData.answer,
       () => setIsSpeaking(true),
-      () => setIsSpeaking(false)
+      () => setIsSpeaking(false),
+      language
     );
   };
 
@@ -135,6 +155,8 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
     setConfigSavedToast(true);
     setTimeout(() => setConfigSavedToast(false), 3000);
   };
+
+  const currentKB = BILINGUAL_KNOWLEDGE_BASE[language] || BILINGUAL_KNOWLEDGE_BASE.en;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs font-sans">
@@ -153,16 +175,38 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
               <div className="font-semibold text-sm flex items-center gap-2">
                 <span>EcoVoice AI</span>
                 <span className="bg-amber-400/20 text-amber-300 text-[10px] font-mono font-medium px-2 py-0.2 rounded-full border border-amber-300/30">
-                  ElevenLabs Voice Track
+                  ElevenLabs Multilingual V2
                 </span>
               </div>
               <p className="text-[11px] text-emerald-200/80">
-                IIT Roorkee Smart Waste Spoken Assistant
+                {language === 'hi' ? 'आईआईटी रुड़की द्विभाषी वॉयस सहायक (हिंदी/अंग्रेजी)' : 'IIT Roorkee Bilingual Voice Assistant (EN/HI)'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Language Switcher Pill */}
+            <div className="bg-white/10 p-0.5 rounded-lg flex items-center border border-white/20 text-[11px]">
+              <button
+                type="button"
+                onClick={() => handleToggleLanguage('en')}
+                className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                  language === 'en' ? 'bg-white text-slate-900 font-bold' : 'text-emerald-200 hover:text-white'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleLanguage('hi')}
+                className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                  language === 'hi' ? 'bg-amber-400 text-slate-950 font-bold' : 'text-emerald-200 hover:text-white'
+                }`}
+              >
+                हिन्दी
+              </button>
+            </div>
+
             <button
               onClick={() => setShowSettings(!showSettings)}
               className="p-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-white/10 transition-colors"
@@ -188,7 +232,7 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
             <div className="flex items-center justify-between">
               <span className="font-semibold text-slate-800 flex items-center gap-1.5">
                 <Key className="w-3.5 h-3.5 text-amber-600" />
-                <span>Configure ElevenLabs Credits & Voice</span>
+                <span>Configure ElevenLabs Credits & Multilingual V2</span>
               </span>
               <span className="text-[10px] text-slate-400">
                 SOCIOTHON 2026 Sponsor Track
@@ -229,7 +273,7 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
 
             <div className="flex items-center justify-between pt-1">
               <span className="text-[11px] text-slate-500">
-                {config.apiKey ? '✓ Custom ElevenLabs API key active' : '⚡ Using Browser Speech fallback (enter key for ElevenLabs credits)'}
+                {config.apiKey ? '✓ ElevenLabs Multilingual V2 active' : '⚡ Using Browser Speech fallback (enter key for ElevenLabs credits)'}
               </span>
 
               <button
@@ -267,10 +311,10 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
                   <div className="flex items-center justify-between text-[10px] text-emerald-800 font-medium mb-1">
                     <span className="flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-amber-600" />
-                      EcoVoice AI (Spoken)
+                      EcoVoice AI ({language.toUpperCase()})
                     </span>
                     <button
-                      onClick={() => speakText(msg.text, () => setIsSpeaking(true), () => setIsSpeaking(false))}
+                      onClick={() => speakText(msg.text, () => setIsSpeaking(true), () => setIsSpeaking(false), language)}
                       className="text-slate-400 hover:text-slate-700"
                       title="Replay Voice"
                     >
@@ -287,7 +331,9 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
             <div className="flex justify-start">
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-900 flex items-center gap-2 animate-pulse">
                 <Radio className="w-3.5 h-3.5 text-amber-600 animate-spin" />
-                <span>Listening to your voice... Speak now!</span>
+                <span>
+                  {language === 'hi' ? 'आपकी आवाज़ सुन रहे हैं... बोलिए!' : 'Listening to your voice... Speak now!'}
+                </span>
               </div>
             </div>
           )}
@@ -297,9 +343,11 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
 
         {/* Quick Question Prompts */}
         <div className="px-4 py-2 border-t border-slate-100 bg-white">
-          <span className="text-[10px] text-slate-400 block mb-1">Quick Voice Prompts (Click to ask):</span>
+          <span className="text-[10px] text-slate-400 block mb-1">
+            {language === 'hi' ? 'त्वरित प्रश्न (क्लिक करके पूछें):' : 'Quick Voice Prompts (Click to ask):'}
+          </span>
           <div className="flex gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
-            {ECOVOICE_KNOWLEDGE_BASE.slice(0, 4).map((kb, idx) => (
+            {currentKB.slice(0, 4).map((kb, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -329,7 +377,11 @@ export default function EcoVoiceAgentModal({ isOpen, onClose }) {
 
           <input
             type="text"
-            placeholder={isListening ? 'Listening...' : 'Type or ask a waste question...'}
+            placeholder={
+              isListening 
+                ? (language === 'hi' ? 'सुन रहे हैं...' : 'Listening...') 
+                : (language === 'hi' ? 'कचरा या डस्टबिन का सवाल पूछें...' : 'Type or ask a waste question...')
+            }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendQuery()}
