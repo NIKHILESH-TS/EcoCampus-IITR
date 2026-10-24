@@ -33,7 +33,7 @@ export default function StudentPortal({ onOpenQrScanner, onOpenVoiceAgent }) {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5 font-sans pb-24 md:pb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 font-sans pb-24 md:pb-8">
       
       {/* Desktop / Tablet Clean Segmented Top Navigation */}
       <div className="hidden md:flex items-center justify-between bg-white rounded-2xl border border-slate-200 p-1.5 shadow-xs text-xs">
