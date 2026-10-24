@@ -67,6 +67,14 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400">
+            <a
+              href="/EcoCampus_IITR_SOCIOTHON_2026.pptx"
+              download="EcoCampus_IITR_SOCIOTHON_2026.pptx"
+              className="text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1"
+            >
+              <span>Download Pitch Deck (.pptx)</span>
+            </a>
+            <span>•</span>
             <button
               type="button"
               onClick={() => setIsAuthGatewayOpen(true)}
