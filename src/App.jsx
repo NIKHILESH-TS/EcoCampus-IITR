@@ -38,7 +38,12 @@ export default function App() {
 
       {/* Main Role-Specific View */}
       <main className="flex-1 pb-12">
-        {role === 'student' && <StudentPortal />}
+        {role === 'student' && (
+          <StudentPortal 
+            onOpenQrScanner={() => setIsQrScannerOpen(true)}
+            onOpenVoiceAgent={() => setIsVoiceAgentOpen(true)}
+          />
+        )}
         {role === 'worker' && <FieldCrewPortal />}
         {role === 'admin' && (
           <AdminPortal onOpenPrintQr={() => setIsPrintQrOpen(true)} />
