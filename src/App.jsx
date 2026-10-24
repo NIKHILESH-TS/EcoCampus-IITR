@@ -3,11 +3,13 @@ import Navbar from './components/Navbar';
 import StudentPortal from './components/Student/StudentPortal';
 import AdminPortal from './components/Admin/AdminPortal';
 import NotificationsModal from './components/Common/NotificationsModal';
+import EcoVoiceAgentModal from './components/AI/EcoVoiceAgentModal';
 import { Leaf } from 'lucide-react';
 
 export default function App() {
   const [role, setRole] = useState('student'); // 'student' | 'admin'
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isVoiceAgentOpen, setIsVoiceAgentOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
@@ -17,6 +19,7 @@ export default function App() {
         currentRole={role}
         onRoleChange={setRole}
         onOpenNotifications={() => setIsNotifOpen(true)}
+        onOpenVoiceAgent={() => setIsVoiceAgentOpen(true)}
       />
 
       {/* Main Container */}
@@ -40,20 +43,28 @@ export default function App() {
             <span>SOCIOTHON 2026 Prototype</span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] text-slate-400">
+          <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400">
             <span>Govind Bhawan Pilot (200 Bins)</span>
             <span>•</span>
             <span>Shifts: 07:30 AM / 02:00 PM / 08:30 PM</span>
             <span>•</span>
-            <span>Zero-Waste Circular Exchange</span>
+            <span>🎙️ ElevenLabs Voice Track</span>
+            <span>•</span>
+            <span>🚀 Render Track</span>
           </div>
         </div>
       </footer>
 
-      {/* One-Way Notifications Log Modal */}
+      {/* Notifications Drawer */}
       <NotificationsModal
         isOpen={isNotifOpen}
         onClose={() => setIsNotifOpen(false)}
+      />
+
+      {/* ElevenLabs EcoVoice AI Assistant Modal */}
+      <EcoVoiceAgentModal
+        isOpen={isVoiceAgentOpen}
+        onClose={() => setIsVoiceAgentOpen(false)}
       />
 
     </div>

@@ -10,14 +10,17 @@ import {
   ShieldCheck, 
   AlertCircle,
   Truck,
-  HeartHandshake
+  HeartHandshake,
+  Navigation,
+  Sparkles
 } from 'lucide-react';
 import { db, SHIFT_TIMINGS, WASTE_TYPES } from '../../services/db';
-import { IITR_CAMPUS_BENCHMARKS } from '../../data/iitrCampusData';
 import { WasteBadge, FillStatusBadge, ComplaintBadge } from '../Common/Badges';
+import RouteOptimizer from '../Collection/RouteOptimizer';
+import WasteMonitoringDashboard from '../Analytics/WasteMonitoringDashboard';
 
 export default function AdminPortal() {
-  const [activeTab, setActiveTab] = useState('complaints'); // 'complaints' | 'bins' | 'market_audit' | 'analytics'
+  const [activeTab, setActiveTab] = useState('complaints'); // 'complaints' | 'bins' | 'routing' | 'monitoring' | 'market_audit'
   const [bins, setBins] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [marketItems, setMarketItems] = useState([]);
@@ -70,20 +73,20 @@ export default function AdminPortal() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 font-sans">
       
       {/* Admin Executive Header */}
       <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-subtle">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] font-bold bg-slate-900 text-white px-2 py-0.5 rounded">
+              <span className="font-mono text-[10px] font-bold bg-brand-dark text-white px-2 py-0.5 rounded">
                 IITR ESTATE SWM DESK
               </span>
-              <span className="text-xs text-slate-500 font-medium">Govind Bhawan Pilot & Campus Community Bins</span>
+              <span className="text-xs text-slate-500 font-medium">Govind Bhawan Pilot & Campus Fleet</span>
             </div>
             <h2 className="text-base font-semibold text-slate-900 mt-1">
-              Campus Solid Waste Operations & Dispatch Center
+              Campus Solid Waste Operations, Routing & Dispatch Console
             </h2>
           </div>
 
@@ -99,19 +102,19 @@ export default function AdminPortal() {
           </div>
         </div>
 
-        {/* Tab Controls */}
-        <div className="flex flex-wrap gap-1 mt-4">
+        {/* Tab Controls across the 4 Problem Domains */}
+        <div className="flex flex-wrap gap-1 mt-4 text-xs">
           <button
             type="button"
             onClick={() => setActiveTab('complaints')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'complaints'
-                ? 'bg-slate-900 text-white'
+                ? 'bg-slate-900 text-white font-semibold'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-            <span>Complaints & Auto-Dispatches ({complaints.length})</span>
+            <span>Complaints & Auto-Ack ({complaints.length})</span>
             {pendingComplaintsCount > 0 && (
               <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">
                 {pendingComplaintsCount}
@@ -122,40 +125,53 @@ export default function AdminPortal() {
           <button
             type="button"
             onClick={() => setActiveTab('bins')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'bins'
-                ? 'bg-slate-900 text-white'
+                ? 'bg-slate-900 text-white font-semibold'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Trash2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Govind Bhawan 200 Bins Fleet</span>
+            <span>Govind Bhawan 200 Bins</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('routing')}
+            className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
+              activeTab === 'routing'
+                ? 'bg-slate-900 text-white font-semibold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Truck className="w-3.5 h-3.5 text-blue-400" />
+            <span>Route Optimization (Domain 2)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('monitoring')}
+            className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
+              activeTab === 'monitoring'
+                ? 'bg-slate-900 text-white font-semibold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <BarChart3 className="w-3.5 h-3.5 text-purple-400" />
+            <span>Monitoring & Forecasts (Domain 4)</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('market_audit')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'market_audit'
-                ? 'bg-slate-900 text-white'
+                ? 'bg-slate-900 text-white font-semibold'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <HeartHandshake className="w-3.5 h-3.5 text-blue-400" />
+            <HeartHandshake className="w-3.5 h-3.5 text-amber-400" />
             <span>Community Re-Use Audit ({marketItems.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('analytics')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-              activeTab === 'analytics'
-                ? 'bg-slate-900 text-white'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-          >
-            <BarChart3 className="w-3.5 h-3.5 text-purple-400" />
-            <span>IITR Empirical SWM Analytics (MDPI Study)</span>
           </button>
         </div>
       </div>
@@ -165,10 +181,10 @@ export default function AdminPortal() {
         <div className="space-y-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <h3 className="font-semibold text-slate-900 text-sm">
-              Student Complaints & Official Dispatch Queue
+              Student Complaints & Official One-Way Dispatch Queue
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Review issues filed by students, dispatch sanitation squad carts, and deliver automatic or customized one-way status updates.
+              Review issues reported by students, dispatch sanitation squad carts, and deliver automatic or customized one-way status updates.
             </p>
           </div>
 
@@ -376,7 +392,13 @@ export default function AdminPortal() {
         </div>
       )}
 
-      {/* TAB 3: Community Re-Use Audit */}
+      {/* TAB 3: Route Optimization (Domain 2) */}
+      {activeTab === 'routing' && <RouteOptimizer />}
+
+      {/* TAB 4: Data-Driven Waste Monitoring & Forecasts (Domain 4) */}
+      {activeTab === 'monitoring' && <WasteMonitoringDashboard />}
+
+      {/* TAB 5: Community Re-Use Audit */}
       {activeTab === 'market_audit' && (
         <div className="space-y-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4">
@@ -417,57 +439,6 @@ export default function AdminPortal() {
                       </span>
                     </td>
                     <td className="p-3 pr-4 text-slate-600">{item.claimedBy || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: IITR Empirical SWM Analytics (MDPI 2019 Study Data) */}
-      {activeTab === 'analytics' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <h3 className="font-semibold text-slate-900 text-sm">
-              IIT Roorkee Empirical Solid Waste Profile
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Empirical data from the 2019 MDPI study: 365 acres, 12,000 population, 5,500 kg/day total solid waste.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-            {IITR_CAMPUS_BENCHMARKS.sourceBreakdown.map((src, idx) => (
-              <div key={idx} className="bg-white p-3.5 rounded-xl border border-slate-200 text-xs">
-                <div className="text-slate-500 text-[11px] truncate">{src.source.split('(')[0]}</div>
-                <div className="font-bold text-lg text-slate-900 font-mono mt-1">{src.kgPerDay} kg</div>
-                <div className="text-[11px] text-emerald-800 font-medium">{src.percent}% of campus</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Detailed Typology table */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden text-xs">
-            <div className="p-3 border-b border-slate-100 font-semibold text-slate-800">
-              Waste Typology & Target Processing Destination
-            </div>
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 text-slate-500 font-semibold uppercase text-[10px]">
-                <tr>
-                  <th className="p-3 pl-4">Waste Type</th>
-                  <th className="p-3">Daily (kg)</th>
-                  <th className="p-3">Share (%)</th>
-                  <th className="p-3 pr-4">Assigned Processing / Recovery Unit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {IITR_CAMPUS_BENCHMARKS.typologyBreakdown.map((t, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50">
-                    <td className="p-3 pl-4 font-medium text-slate-800">{t.type}</td>
-                    <td className="p-3 font-mono font-bold text-slate-900">{t.kgPerDay} kg</td>
-                    <td className="p-3 font-mono text-slate-600">{t.percent}%</td>
-                    <td className="p-3 pr-4 text-emerald-800">{t.destination}</td>
                   </tr>
                 ))}
               </tbody>

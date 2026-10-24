@@ -1,48 +1,84 @@
 import React, { useState } from 'react';
-import { AlertCircle, HeartHandshake, Layers } from 'lucide-react';
+import { 
+  AlertCircle, 
+  HeartHandshake, 
+  Sparkles, 
+  Recycle, 
+  Layers 
+} from 'lucide-react';
 import ComplaintPortal from './ComplaintPortal';
 import CommunityMarketplace from './CommunityMarketplace';
+import WasteClassifier from '../AI/WasteClassifier';
+import CircularResourceDirectory from '../Recycling/CircularResourceDirectory';
 
 export default function StudentPortal() {
-  const [activeTab, setActiveTab] = useState('complaints'); // 'complaints' | 'marketplace'
+  const [activeTab, setActiveTab] = useState('complaints');
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 font-sans">
       
-      {/* Clean Minimalist Primary Tab Bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-1.5 flex items-center gap-1 shadow-subtle">
+      {/* 4 Clean Primary Student Tabs */}
+      <div className="bg-white rounded-xl border border-slate-200 p-1.5 flex flex-wrap sm:flex-nowrap items-center gap-1 shadow-subtle text-xs">
         
         <button
           type="button"
           onClick={() => setActiveTab('complaints')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors ${
+          className={`flex-1 min-w-[170px] py-2 px-3 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-colors ${
             activeTab === 'complaints'
-              ? 'bg-brand-dark text-white shadow-sm'
+              ? 'bg-slate-900 text-white font-semibold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
-          <AlertCircle className="w-4 h-4 text-emerald-400" />
-          <span>Govind Bhawan 200 Bins & Complaints</span>
+          <AlertCircle className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Govind Bins & Complaints</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('ai_classifier')}
+          className={`flex-1 min-w-[170px] py-2 px-3 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-colors ${
+            activeTab === 'ai_classifier'
+              ? 'bg-slate-900 text-white font-semibold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <span>AI Waste Identifier (Voice)</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('marketplace')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors ${
+          className={`flex-1 min-w-[170px] py-2 px-3 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-colors ${
             activeTab === 'marketplace'
-              ? 'bg-brand-dark text-white shadow-sm'
+              ? 'bg-slate-900 text-white font-semibold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
-          <HeartHandshake className="w-4 h-4 text-amber-300" />
-          <span>Govind Bhawan Re-Use & EcoTrade</span>
+          <HeartHandshake className="w-3.5 h-3.5 text-blue-400" />
+          <span>Govind Re-Use (EcoPoints)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('resources')}
+          className={`flex-1 min-w-[170px] py-2 px-3 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-colors ${
+            activeTab === 'resources'
+              ? 'bg-slate-900 text-white font-semibold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+          }`}
+        >
+          <Recycle className="w-3.5 h-3.5 text-purple-400" />
+          <span>Campus Circular Recovery</span>
         </button>
 
       </div>
 
-      {/* Render active module */}
+      {/* Render Selected View */}
       {activeTab === 'complaints' && <ComplaintPortal />}
+      {activeTab === 'ai_classifier' && <WasteClassifier />}
       {activeTab === 'marketplace' && <CommunityMarketplace />}
+      {activeTab === 'resources' && <CircularResourceDirectory />}
 
     </div>
   );
