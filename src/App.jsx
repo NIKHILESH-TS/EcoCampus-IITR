@@ -10,7 +10,8 @@ import NotificationsModal from './components/Common/NotificationsModal';
 import EcoVoiceAgentModal from './components/AI/EcoVoiceAgentModal';
 import BinQRScannerModal from './components/QR/BinQRScannerModal';
 import PrintableQRSheetsModal from './components/QR/PrintableQRSheetsModal';
-import { Leaf } from 'lucide-react';
+import AuthGatewayModal from './components/Auth/AuthGatewayModal';
+import { Leaf, KeyRound } from 'lucide-react';
 
 export default function App() {
   const [role, setRole] = useState('student'); // 'student' | 'worker' | 'admin' | 'recycler'
@@ -20,11 +21,12 @@ export default function App() {
   const [isPrintQrOpen, setIsPrintQrOpen] = useState(false);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [isProConnectOpen, setIsProConnectOpen] = useState(false);
+  const [isAuthGatewayOpen, setIsAuthGatewayOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-slate-900 antialiased">
       
-      {/* Universal 4-Role Navigation Bar */}
+      {/* Unified Apple/Google-Style Translucent Header */}
       <Navbar 
         currentRole={role}
         onRoleChange={setRole}
@@ -34,6 +36,7 @@ export default function App() {
         onOpenPrintQr={() => setIsPrintQrOpen(true)}
         onOpenVault={() => setIsVaultOpen(true)}
         onOpenProConnect={() => setIsProConnectOpen(true)}
+        onOpenAuthGateway={() => setIsAuthGatewayOpen(true)}
       />
 
       {/* Main Role-Specific View */}
@@ -52,32 +55,55 @@ export default function App() {
       </main>
 
       {/* Clean Minimalist Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-auto text-xs text-slate-500 font-sans">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-slate-900 flex items-center justify-center text-white">
+      <footer className="bg-white border-t border-slate-200/80 mt-auto text-xs text-slate-500 font-sans">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-5 h-5 rounded-md bg-slate-900 flex items-center justify-center text-white">
               <Leaf className="w-3 h-3 text-emerald-400" />
             </div>
-            <span className="font-semibold text-slate-800">EcoCampus IIT Roorkee</span>
-            <span>•</span>
-            <span>SOCIOTHON 2026 Champion Prototype</span>
+            <span className="font-semibold text-slate-900">EcoCampus IIT Roorkee</span>
+            <span className="text-slate-300">•</span>
+            <span>Circular Solid Waste Operating System</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
-            <span>Govind Bhawan (200 Bins)</span>
+          <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400">
+            <button
+              type="button"
+              onClick={() => setIsAuthGatewayOpen(true)}
+              className="text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1 cursor-pointer"
+            >
+              <KeyRound className="w-3 h-3" />
+              <span>Demo Credentials (4 Personas)</span>
+            </button>
             <span>•</span>
-            <span>MobileNetV3 Edge Inference</span>
+            <button
+              type="button"
+              onClick={() => setIsProConnectOpen(true)}
+              className="text-slate-500 hover:text-slate-800 cursor-pointer"
+            >
+              ElevenLabs Voice Config
+            </button>
             <span>•</span>
-            <span>🎙️ ElevenLabs Multilingual V2</span>
-            <span>•</span>
-            <span>🏛️ Campus Circular Vault</span>
-            <span>•</span>
-            <span>🚀 Render Production Ready</span>
+            <button
+              type="button"
+              onClick={() => setIsVaultOpen(true)}
+              className="text-slate-500 hover:text-slate-800 cursor-pointer"
+            >
+              Campus Circular Vault
+            </button>
           </div>
         </div>
       </footer>
 
-      {/* Campus Vault & Treasury Modal (Canteen Vouchers, Worker UPI, Flood Relief) */}
+      {/* Sign-In / Sign-Up & 4-Persona Demo Credentials Modal */}
+      <AuthGatewayModal
+        isOpen={isAuthGatewayOpen}
+        onClose={() => setIsAuthGatewayOpen(false)}
+        currentRole={role}
+        onSelectRole={setRole}
+      />
+
+      {/* Campus Vault & Treasury Modal */}
       <CampusVaultModal
         isOpen={isVaultOpen}
         onClose={() => setIsVaultOpen(false)}
@@ -89,7 +115,7 @@ export default function App() {
         onClose={() => setIsProConnectOpen(false)}
       />
 
-      {/* Notifications Drawer (One-Way Admin Acknowledgments) */}
+      {/* Notifications Drawer */}
       <NotificationsModal
         isOpen={isNotifOpen}
         onClose={() => setIsNotifOpen(false)}
