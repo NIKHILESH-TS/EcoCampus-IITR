@@ -8,14 +8,21 @@ import {
   Filter, 
   Clock, 
   ShieldCheck, 
-  AlertCircle,
-  Truck,
-  HeartHandshake,
-  Navigation,
-  Sparkles,
-  Cpu,
-  Trophy,
-  Printer
+  AlertCircle, 
+  Truck, 
+  HeartHandshake, 
+  Navigation, 
+  Sparkles, 
+  Cpu, 
+  Trophy, 
+  Printer,
+  Gavel,
+  Landmark,
+  Scale,
+  Coins,
+  PlusCircle,
+  ThumbsDown,
+  ThumbsUp
 } from 'lucide-react';
 import { db, SHIFT_TIMINGS, WASTE_TYPES } from '../../services/db';
 import { WasteBadge, FillStatusBadge, ComplaintBadge } from '../Common/Badges';
@@ -27,16 +34,27 @@ import GreenBhawanLeaderboard from '../Leaderboard/GreenBhawanLeaderboard';
 
 export default function AdminPortal({ onOpenPrintQr }) {
   const [activeTab, setActiveTab] = useState('complaints'); 
-  // 'complaints' | 'bins' | 'routing' | 'crew_sla' | 'iot_sim' | 'monitoring' | 'leaderboard'
+  // 'complaints' | 'bins' | 'routing' | 'crew_sla' | 'auctions' | 'iot_sim' | 'monitoring' | 'leaderboard'
   
   const [bins, setBins] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [auctionLots, setAuctionLots] = useState([]);
+  const [vault, setVault] = useState(db.getVault());
   const [selectedBlock, setSelectedBlock] = useState('All');
   const [searchBin, setSearchBin] = useState('');
   
   // Custom dispatch modal
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [customDispatchNote, setCustomDispatchNote] = useState('');
+
+  // New Auction Lot Modal
+  const [isNewLotOpen, setIsNewLotOpen] = useState(false);
+  const [newLotTitle, setNewLotTitle] = useState('');
+  const [newLotCategory, setNewLotCategory] = useState('recyclable');
+  const [newLotWeight, setNewLotWeight] = useState('3200');
+  const [newLotReserve, setNewLotReserve] = useState('14.50');
+  const [newLotHours, setNewLotHours] = useState('24');
+  const [newLotGrade, setNewLotGrade] = useState('Grade A Baled');
 
   useEffect(() => {
     loadData();
@@ -47,6 +65,8 @@ export default function AdminPortal({ onOpenPrintQr }) {
   const loadData = () => {
     setBins(db.getBins());
     setComplaints(db.getComplaints());
+    setAuctionLots(db.getAuctionLots());
+    setVault(db.getVault());
   };
 
   const overflowingCount = bins.filter(b => b.status === 'Overflowing' || b.fillLevel > 80).length;
@@ -54,6 +74,32 @@ export default function AdminPortal({ onOpenPrintQr }) {
 
   const handleCleanBin = (binId) => {
     db.cleanBin(binId);
+  };
+
+  const handleAssignWorker = (complaintId) => {
+    db.assignWorkerToComplaint(complaintId, 'USR-003');
+  };
+
+  const handleCreateLot = (e) => {
+    e.preventDefault();
+    db.createAuctionLot({
+      title: newLotTitle || `${newLotWeight} kg Baled ${newLotCategory}`,
+      category: newLotCategory,
+      weightKg: newLotWeight,
+      reservePricePerKg: newLotReserve,
+      durationHours: newLotHours,
+      materialGrade: newLotGrade,
+      moisturePercent: '< 8%'
+    });
+    setIsNewLotOpen(false);
+    setNewLotTitle('');
+  };
+
+  const handleCloseAuction = (lotId) => {
+    const res = db.closeAuctionLot(lotId);
+    if (res) {
+      alert(`Tender ${lotId} successfully awarded to ${res.lot.highestBidderName}! ₹${res.grossInr.toLocaleString()} added to Campus Circular Vault.`);
+    }
   };
 
   const handleDispatchSquad = (complaint) => {
@@ -177,6 +223,22 @@ export default function AdminPortal({ onOpenPrintQr }) {
 
           <button
             type="button"
+            onClick={() => setActiveTab('auctions')}
+            className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
+              activeTab === 'auctions'
+                ? 'bg-slate-900 text-white font-semibold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Gavel className="w-3.5 h-3.5 text-blue-400" />
+            <span>B2B Tenders & Vault</span>
+            <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ml-1">
+              ₹{(vault.totalCashInr / 1000).toFixed(0)}k
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('iot_sim')}
             className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'iot_sim'
@@ -264,6 +326,36 @@ export default function AdminPortal({ onOpenPrintQr }) {
                     </div>
                   </div>
 
+                  {/* Verification Status Banner */}
+                  {complaint.verificationStatus === 'reported_false' && (
+                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 space-y-1.5 text-rose-950">
+                      <div className="flex items-center gap-1.5 font-semibold text-rose-800">
+                        <ThumbsDown className="w-3.5 h-3.5" />
+                        <span>Field Squad Confirmed False Alarm (Spam Prevention)</span>
+                      </div>
+                      <p className="text-[11px] text-rose-700">
+                        Inspected by Ramesh Kumar. Bin was completely clean. <strong>25 EcoTokens deducted from student</strong> to protect system integrity.
+                      </p>
+                      {complaint.workerRemarks && (
+                        <div className="text-[10px] italic text-rose-600 bg-white/60 p-1.5 rounded">
+                          Worker note: "{complaint.workerRemarks}"
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {complaint.verificationStatus === 'verified_legitimate' && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-1 text-emerald-950">
+                      <div className="flex items-center gap-1.5 font-semibold text-emerald-800">
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                        <span>Ground Truth Verified & Restored</span>
+                      </div>
+                      <p className="text-[11px] text-emerald-700">
+                        Student awarded <strong>+35 EcoTokens</strong> for legitimate reporting. Sanitation squad awarded <strong>₹150 weekly bonus</strong>.
+                      </p>
+                    </div>
+                  )}
+
                   {dispatches.length > 0 && (
                     <div className="space-y-1">
                       <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
@@ -278,35 +370,58 @@ export default function AdminPortal({ onOpenPrintQr }) {
                     </div>
                   )}
 
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
-                    {complaint.status !== 'resolved' && (
-                      <>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <div className="text-[11px] text-slate-500">
+                      {complaint.assignedWorkerName ? (
+                        <span className="font-medium text-slate-700 flex items-center gap-1">
+                          <Truck className="w-3 h-3 text-slate-400" />
+                          Assigned: <strong>{complaint.assignedWorkerName}</strong>
+                        </span>
+                      ) : (
+                        <span className="text-amber-700 font-medium">Unassigned</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {!complaint.assignedWorkerName && complaint.status !== 'resolved' && complaint.status !== 'false_alarm' && (
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedComplaint(complaint);
-                            setCustomDispatchNote(`[Estate Office Dispatch] Sanitation squad routed to ${complaint.locationText} with covered container cart.`);
-                          }}
-                          className="px-3 py-1 rounded text-xs font-medium text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-colors"
+                          onClick={() => handleAssignWorker(complaint.id)}
+                          className="px-2.5 py-1 rounded text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors"
                         >
-                          🚚 Dispatch Crew & Message
+                          👷 Assign Squad #2
                         </button>
+                      )}
 
-                        <button
-                          type="button"
-                          onClick={() => handleResolveComplaint(complaint)}
-                          className="px-3 py-1 rounded text-xs font-medium text-emerald-900 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-300 transition-colors"
-                        >
-                          ✓ Mark Resolved
-                        </button>
-                      </>
-                    )}
+                      {complaint.status !== 'resolved' && complaint.status !== 'false_alarm' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedComplaint(complaint);
+                              setCustomDispatchNote(`[Estate Office Dispatch] Sanitation squad routed to ${complaint.locationText} with covered container cart.`);
+                            }}
+                            className="px-3 py-1 rounded text-xs font-medium text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-colors"
+                          >
+                            🚚 Dispatch Note
+                          </button>
 
-                    {complaint.status === 'resolved' && (
-                      <span className="text-emerald-800 text-[11px] font-medium">
-                        ✓ Completed & Verified by Estate Office
-                      </span>
-                    )}
+                          <button
+                            type="button"
+                            onClick={() => handleResolveComplaint(complaint)}
+                            className="px-3 py-1 rounded text-xs font-medium text-emerald-900 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-300 transition-colors"
+                          >
+                            ✓ Mark Resolved
+                          </button>
+                        </>
+                      )}
+
+                      {(complaint.status === 'resolved' || complaint.status === 'false_alarm') && (
+                        <span className="text-slate-500 text-[11px] font-mono">
+                          Case Closed
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -422,6 +537,261 @@ export default function AdminPortal({ onOpenPrintQr }) {
 
       {/* TAB 4: Field Crew Verification & SLA */}
       {activeTab === 'crew_sla' && <FieldCrewPortal />}
+
+      {/* TAB: B2B Scrap Reverse Auctions & Campus Vault */}
+      {activeTab === 'auctions' && (
+        <div className="space-y-6">
+          {/* Vault Overview Card */}
+          <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-sm relative overflow-hidden">
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold px-2 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
+                    <Landmark className="w-3 h-3 text-emerald-400" />
+                    CAMPUS CIRCULAR VAULT TREASURY
+                  </span>
+                  <span className="bg-blue-500/20 text-blue-300 font-mono text-[10px] px-2 py-0.5 rounded">
+                    B2B Reverse Auction Clearing
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold tracking-tight text-white">
+                  Total Recovered Surplus: ₹{vault.totalCashInr.toLocaleString()}
+                </h3>
+                <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  Gross revenue generated from selling campus cardboard, PET flakes, and scrap metals to certified recyclers (ITC, Nepra). Automatically routed into student and worker pools.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsNewLotOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center gap-2 shadow-xs whitespace-nowrap self-start md:self-auto"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Create Weekly Scrap Tender Lot</span>
+              </button>
+            </div>
+
+            {/* Fund Allocation Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 relative z-10 text-xs">
+              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+                <div className="text-[10px] text-emerald-400 font-medium">30% Student Canteen Pool</div>
+                <div className="font-mono font-bold text-base text-white mt-0.5">
+                  ₹{vault.breakdown.studentCanteenPoolInr.toLocaleString()}
+                </div>
+                <div className="text-[10px] text-slate-400">Backs Food Vouchers</div>
+              </div>
+
+              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+                <div className="text-[10px] text-blue-400 font-medium">30% Worker UPI Bonus Pool</div>
+                <div className="font-mono font-bold text-base text-white mt-0.5">
+                  ₹{vault.breakdown.workerUpiBonusPoolInr.toLocaleString()}
+                </div>
+                <div className="text-[10px] text-slate-400">Direct Staff Incentives</div>
+              </div>
+
+              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+                <div className="text-[10px] text-amber-400 font-medium">25% Baler & Sensor Upkeep</div>
+                <div className="font-mono font-bold text-base text-white mt-0.5">
+                  ₹{vault.breakdown.equipmentMaintenanceInr.toLocaleString()}
+                </div>
+                <div className="text-[10px] text-slate-400">Hardware Self-Funding</div>
+              </div>
+
+              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+                <div className="text-[10px] text-rose-400 font-medium">15% Disaster & Flood Relief</div>
+                <div className="font-mono font-bold text-base text-white mt-0.5">
+                  ₹{vault.breakdown.disasterReliefReserveInr.toLocaleString()}
+                </div>
+                <div className="text-[10px] text-slate-400">NSS Matching Grant</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Scrap Tenders List */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h4 className="font-bold text-slate-900 text-sm">
+                  Active Campus Commodity Lots ({auctionLots.length} Total)
+                </h4>
+                <p className="text-xs text-slate-500">
+                  Weekly consignments created by Estate Office for B2B buyer bidding.
+                </p>
+              </div>
+              <span className="text-[11px] font-mono text-slate-400">
+                Bidding Duration Managed by Estate Officer
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {auctionLots.map(lot => (
+                <div key={lot.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 text-xs flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">
+                          {lot.id}
+                        </span>
+                        <WasteBadge category={lot.category} />
+                      </div>
+                      <span className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] ${
+                        lot.status === 'active' 
+                          ? 'bg-amber-100 text-amber-800' 
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {lot.status === 'active' ? 'BIDDING OPEN' : 'AWARDED & CLOSED'}
+                      </span>
+                    </div>
+
+                    <h5 className="font-semibold text-slate-900 text-sm mt-2">{lot.title}</h5>
+                    
+                    <div className="grid grid-cols-3 gap-2 mt-2.5 text-[11px]">
+                      <div className="bg-white p-2 rounded border border-slate-200">
+                        <span className="text-slate-400 block text-[10px]">Net Mass</span>
+                        <strong className="font-mono text-slate-800">{lot.weightKg.toLocaleString()} kg</strong>
+                      </div>
+                      <div className="bg-white p-2 rounded border border-slate-200">
+                        <span className="text-slate-400 block text-[10px]">Current Bid</span>
+                        <strong className="font-mono text-emerald-700">₹{lot.currentHighestBid.toFixed(2)}/kg</strong>
+                      </div>
+                      <div className="bg-white p-2 rounded border border-slate-200">
+                        <span className="text-slate-400 block text-[10px]">Gross Value</span>
+                        <strong className="font-mono text-slate-900">₹{Math.round(lot.weightKg * lot.currentHighestBid).toLocaleString()}</strong>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 p-2 bg-white rounded border border-slate-200 flex items-center justify-between text-[11px]">
+                      <span className="text-slate-500">Leading Bidder:</span>
+                      <strong className="text-slate-800 truncate max-w-[200px]">{lot.highestBidderName}</strong>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Window: {lot.durationHours} Hours • {lot.bids.length} Bids Logged
+                    </span>
+
+                    {lot.status === 'active' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleCloseAuction(lot.id)}
+                        className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium text-xs flex items-center gap-1 transition-colors"
+                      >
+                        <Gavel className="w-3 h-3" />
+                        <span>Award & Close Tender</span>
+                      </button>
+                    ) : (
+                      <span className="text-emerald-700 font-mono text-[10px] font-bold">
+                        Pass: {lot.gatePassNumber}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Scrap Tender Modal */}
+      {isNewLotOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 shadow-xl text-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-semibold text-slate-900 text-base">Create Weekly B2B Scrap Tender Lot</h3>
+                <span className="text-slate-500 text-[11px]">Post accumulated dry baled scrap for corporate reverse auction</span>
+              </div>
+              <button onClick={() => setIsNewLotOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+
+            <form onSubmit={handleCreateLot} className="space-y-3">
+              <div>
+                <label className="block font-medium text-slate-700 mb-1">Lot Title</label>
+                <input
+                  type="text"
+                  value={newLotTitle}
+                  onChange={(e) => setNewLotTitle(e.target.value)}
+                  placeholder="e.g. 3,500 kg Compressed Cardboard Bales"
+                  className="w-full p-2 border border-slate-300 rounded-lg"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1">Net Mass (kg)</label>
+                  <input
+                    type="number"
+                    value={newLotWeight}
+                    onChange={(e) => setNewLotWeight(e.target.value)}
+                    required
+                    className="w-full p-2 border border-slate-300 rounded-lg font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1">Reserve Floor (₹/kg)</label>
+                  <input
+                    type="number"
+                    step="0.50"
+                    value={newLotReserve}
+                    onChange={(e) => setNewLotReserve(e.target.value)}
+                    required
+                    className="w-full p-2 border border-slate-300 rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1">Material Category</label>
+                  <select
+                    value={newLotCategory}
+                    onChange={(e) => setNewLotCategory(e.target.value)}
+                    className="w-full p-2 border border-slate-300 rounded-lg bg-white"
+                  >
+                    <option value="recyclable">Paper / Cardboard</option>
+                    <option value="recyclable">PET / Polymer Flakes</option>
+                    <option value="e_waste">Electronic / PCB Scrap</option>
+                    <option value="non_recyclable">Refuse-Derived Fuel (RDF)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1">Bidding Window Duration</label>
+                  <select
+                    value={newLotHours}
+                    onChange={(e) => setNewLotHours(e.target.value)}
+                    className="w-full p-2 border border-slate-300 rounded-lg bg-white font-mono"
+                  >
+                    <option value="24">24 Hours (Standard)</option>
+                    <option value="48">48 Hours (Weekend)</option>
+                    <option value="72">72 Hours (Bulk)</option>
+                    <option value="168">7 Days (Full Week)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsNewLotOpen(false)}
+                  className="px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                >
+                  Publish Tender Lot
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* TAB 5: IoT Sensor Hardware Simulator */}
       {activeTab === 'iot_sim' && <IoTSensorSimulator />}

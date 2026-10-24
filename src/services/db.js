@@ -57,7 +57,9 @@ export const ITEM_CATEGORIES = {
   appliances: { label: 'Hostel Appliances & Kettles', basePoints: 75, academicBonus: 5 },
   lab_gear: { label: 'Engineering Drafters & Lab Coats', basePoints: 50, academicBonus: 20 },
   cycles: { label: 'Campus Bicycles & Locks', basePoints: 85, academicBonus: 10 },
-  furniture: { label: 'Study Tables, Mattresses & Racks', basePoints: 70, academicBonus: 5 }
+  furniture: { label: 'Study Tables, Mattresses & Racks', basePoints: 70, academicBonus: 5 },
+  sports_skates: { label: 'Roller Skates & Sports Gear', basePoints: 65, academicBonus: 5 },
+  shoes_apparel: { label: 'Shoes, Cleats & Winter Jackets', basePoints: 50, academicBonus: 5 }
 };
 
 export const CONDITIONS = {
@@ -89,6 +91,31 @@ function createInitialUsers() {
       hostel: 'Main Building Complex',
       department: 'IIT Roorkee Administration',
       ecoPointsBalance: 0,
+      createdAt: '2026-10-01T08:00:00Z'
+    },
+    {
+      id: 'USR-003',
+      name: 'Ramesh Kumar (Squad #2)',
+      email: 'ramesh.field@iitr.ac.in',
+      role: 'worker',
+      room: 'Sanitation Beat Post #2',
+      hostel: 'Govind Bhawan Beat',
+      department: 'Campus Sanitation & Field Operations',
+      ecoPointsBalance: 0,
+      weeklyBonusInr: 1250,
+      upiId: 'ramesh.squad2@okhdfcbank',
+      createdAt: '2026-10-01T08:00:00Z'
+    },
+    {
+      id: 'USR-004',
+      name: 'Rajesh Gupta (ITC Paperboards)',
+      email: 'rajesh.gupta@itc.in',
+      role: 'recycler',
+      room: 'Corporate B2B Partner Desk',
+      hostel: 'ITC WOW Haridwar Division',
+      department: 'ITC Paperboards & Specialty Papers Ltd.',
+      ecoPointsBalance: 0,
+      verifiedGstin: '05AAACI1234Q1Z2',
       createdAt: '2026-10-01T08:00:00Z'
     }
   ];
@@ -122,6 +149,8 @@ function create200GovindBhawanBins() {
       const nextShift = (id % 3 === 0) ? '02:00 PM' : ((id % 3 === 1) ? '08:30 PM' : '07:30 AM');
       const lastCleaned = (id % 2 === 0) ? 'Today, 07:30 AM' : 'Yesterday, 08:30 PM';
 
+      const calculatedWeight = Math.round(((fillVariation / 100) * 38 + 2.5) * 10) / 10;
+
       bins.push({
         id: `GB-${String(id).padStart(3, '0')}`,
         block: block.name,
@@ -129,6 +158,7 @@ function create200GovindBhawanBins() {
         locationDetail: `${block.name}, ${floor} (Wing ${(id % 4) + 1})`,
         category: category,
         fillLevel: fillVariation,
+        weightKg: calculatedWeight,
         status: status,
         lastCleanedAt: lastCleaned,
         nextShiftTime: nextShift,
@@ -156,6 +186,11 @@ function createInitialComplaints() {
       details: 'Food scrap bin is over 90% full after morning breakfast hours. Attracting flies.',
       photoUrl: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=500&q=80',
       status: 'in_progress',
+      assignedWorkerId: 'USR-003',
+      assignedWorkerName: 'Ramesh Kumar (Squad #2)',
+      verificationStatus: 'pending',
+      workerProofPhoto: null,
+      workerRemarks: null,
       createdAt: 'Today, 08:45 AM',
       resolvedAt: null
     },
@@ -170,6 +205,11 @@ function createInitialComplaints() {
       details: 'Plastic hydration bottles and energy drink cans scattered on track verge after morning sports practice.',
       photoUrl: 'https://images.unsplash.com/photo-1528323273322-d81458248d40?auto=format&fit=crop&w=500&q=80',
       status: 'pending',
+      assignedWorkerId: null,
+      assignedWorkerName: null,
+      verificationStatus: 'unassigned',
+      workerProofPhoto: null,
+      workerRemarks: null,
       createdAt: 'Today, 09:15 AM',
       resolvedAt: null
     },
@@ -184,8 +224,116 @@ function createInitialComplaints() {
       details: 'Discarded laptop charger and burned battery found inside wet food waste bin.',
       photoUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=500&q=80',
       status: 'resolved',
+      assignedWorkerId: 'USR-003',
+      assignedWorkerName: 'Ramesh Kumar (Squad #2)',
+      verificationStatus: 'verified_legitimate',
+      workerProofPhoto: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500&q=80',
+      workerRemarks: 'Charger & lithium cell safely extracted to orange hazardous container. Wet bin sanitized.',
       createdAt: 'Yesterday, 04:30 PM',
       resolvedAt: 'Yesterday, 05:45 PM'
+    }
+  ];
+}
+
+function createInitialVault() {
+  return {
+    totalCashInr: 148500, // Recovered from scrap auctions & LPG offset
+    breakdown: {
+      studentCanteenPoolInr: 44550, // 30% for food vouchers & token cashouts
+      workerUpiBonusPoolInr: 44550, // 30% for ground sanitation staff weekly bonus
+      equipmentMaintenanceInr: 37125, // 25% for IoT sensors & hydraulic baler upkeep
+      disasterReliefReserveInr: 22275 // 15% emergency reserve & flood matching
+    },
+    exchangeRateInrPerToken: 0.50, // 1 EcoToken = ₹0.50
+    floodRelief: {
+      driveName: 'Uttarakhand Flood & Landslide Relief Fund',
+      targetTokens: 10000,
+      tokensDonated: 4820,
+      cashDisbursedInr: 2410,
+      beneficiary: 'CM Relief Fund Uttarakhand via NSS IIT Roorkee',
+      active: true
+    },
+    recentTransactions: [
+      { id: 'VTX-01', type: 'auction_credit', amountInr: 58800, description: 'Lot #IITR-2026-CB12: 3,500kg Cardboard sold to ITC Paperboards', timestamp: 'Today, 11:30 AM' },
+      { id: 'VTX-02', type: 'worker_bonus_upi', amountInr: 17640, description: 'Weekly 30% Scrap Incentive disbursed to 12 Sanitation Staff', timestamp: 'Yesterday, 06:00 PM' },
+      { id: 'VTX-03', type: 'canteen_voucher_redeem', amountInr: 450, description: 'Student Canteen Voucher redemption (900 EcoTokens)', timestamp: 'Today, 09:15 AM' },
+      { id: 'VTX-04', type: 'flood_relief_disbursement', amountInr: 2410, description: 'Matching grant disbursed for 4,820 student donated tokens', timestamp: '2 days ago' }
+    ]
+  };
+}
+
+function createInitialAuctionLots() {
+  return [
+    {
+      id: 'LOT-IITR-2026-W42',
+      title: '4,200 kg Baled Corrugated Cardboard & Kraft Paper',
+      category: 'recyclable',
+      materialGrade: 'Grade A - Dry Baled',
+      weightKg: 4200,
+      moisturePercent: '8.4%',
+      baleDensity: '380 kg/m³',
+      pickupLocation: 'Central SWM Yard, Near Upper Ganga Canal, IIT Roorkee',
+      reservePricePerKg: 13.50,
+      currentHighestBid: 17.20,
+      highestBidderName: 'ITC Paperboards & Specialty Papers Ltd.',
+      highestBidderId: 'USR-004',
+      bidCount: 7,
+      status: 'active', // 'active' | 'awarded'
+      durationHours: 24,
+      expiresAt: new Date(Date.now() + 14 * 3600 * 1000 + 22 * 60 * 1000).toISOString(),
+      bids: [
+        { id: 'BID-01', bidder: 'Roorkee Kabadiwala Scrap Welfare', amountPerKg: 14.50, time: '3 hours ago' },
+        { id: 'BID-02', bidder: 'GreenJams Sustainable Solutions', amountPerKg: 15.80, time: '2 hours ago' },
+        { id: 'BID-03', bidder: 'Nepra Waste Capital Ltd.', amountPerKg: 16.50, time: '45 mins ago' },
+        { id: 'BID-04', bidder: 'ITC Paperboards & Specialty Papers Ltd.', amountPerKg: 17.20, time: '12 mins ago' }
+      ]
+    },
+    {
+      id: 'LOT-IITR-2026-W43',
+      title: '1,850 kg Washed & Shredded PET Bottles (Clear Flakes)',
+      category: 'recyclable',
+      materialGrade: 'Food-Grade PET (Type 1)',
+      weightKg: 1850,
+      moisturePercent: '< 1.5%',
+      baleDensity: '290 kg/m³',
+      pickupLocation: 'Central SWM Yard, Near Upper Ganga Canal, IIT Roorkee',
+      reservePricePerKg: 28.00,
+      currentHighestBid: 34.50,
+      highestBidderName: 'Nepra Waste Capital Ltd.',
+      highestBidderId: 'REC-002',
+      bidCount: 5,
+      status: 'active',
+      durationHours: 48,
+      expiresAt: new Date(Date.now() + 28 * 3600 * 1000).toISOString(),
+      bids: [
+        { id: 'BID-11', bidder: 'Haridwar Polymer Recycling', amountPerKg: 29.50, time: '4 hours ago' },
+        { id: 'BID-12', bidder: 'Reliance Circular Polymers', amountPerKg: 32.00, time: '1 hour ago' },
+        { id: 'BID-13', bidder: 'Nepra Waste Capital Ltd.', amountPerKg: 34.50, time: '25 mins ago' }
+      ]
+    },
+    {
+      id: 'LOT-IITR-2026-W41',
+      title: '620 kg Clean Aluminium Can Bales & Extrusions',
+      category: 'recyclable',
+      materialGrade: 'High-Purity Aluminium (UBC)',
+      weightKg: 620,
+      moisturePercent: '0%',
+      baleDensity: '450 kg/m³',
+      pickupLocation: 'Central SWM Yard, Near Upper Ganga Canal, IIT Roorkee',
+      reservePricePerKg: 105.00,
+      currentHighestBid: 122.00,
+      highestBidderName: 'Hindalco Recycling Network',
+      highestBidderId: 'REC-003',
+      bidCount: 6,
+      status: 'awarded',
+      durationHours: 24,
+      expiresAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+      awardedAt: 'Today, 10:30 AM',
+      gatePassNumber: 'GP-IITR-2026-089',
+      bids: [
+        { id: 'BID-21', bidder: 'Local Metal Recycler', amountPerKg: 110.00, time: 'Yesterday' },
+        { id: 'BID-22', bidder: 'Hindalco Recycling Network', amountPerKg: 122.00, time: 'Today, 10:25 AM' }
+      ]
     }
   ];
 }
@@ -284,6 +432,38 @@ function createInitialMarketplace() {
       isFree: false,
       status: 'available',
       createdAt: '3 days ago'
+    },
+    {
+      id: 'GB-TRADE-005',
+      sellerId: 'USR-001',
+      sellerName: 'Rahul Verma',
+      sellerRoom: 'Govind Bhawan, Room C-214',
+      sellerEmail: 'rahul.v@me.iitr.ac.in',
+      title: 'Oxelo Adjustable Inline Roller Skates (Size UK 7-9)',
+      category: 'sports_skates',
+      condition: 'good',
+      ecoPointsPrice: 70,
+      description: 'Used for campus skating outside LHC. In good working condition with wrist guards.',
+      photoUrl: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&w=500&q=80',
+      isFree: true,
+      status: 'available',
+      createdAt: '1 day ago'
+    },
+    {
+      id: 'GB-TRADE-006',
+      sellerId: 'USR-001',
+      sellerName: 'Aman Deep',
+      sellerRoom: 'Govind Bhawan, Room A-118',
+      sellerEmail: 'aman.d@ce.iitr.ac.in',
+      title: 'Kalenji Running & Gym Shoes (Size UK 8)',
+      category: 'shoes_apparel',
+      condition: 'fair',
+      ecoPointsPrice: 45,
+      description: 'Clean gym trainers. Free giveaway to someone who needs running shoes.',
+      photoUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80',
+      isFree: true,
+      status: 'available',
+      createdAt: '4 hours ago'
     }
   ];
 }
@@ -330,7 +510,20 @@ class EcoCampusDB {
   load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (!parsed.vault) parsed.vault = createInitialVault();
+        if (!parsed.auctionLots) parsed.auctionLots = createInitialAuctionLots();
+        if (parsed.users && parsed.users.length < 4) {
+          const defaults = createInitialUsers();
+          defaults.forEach(u => {
+            if (!parsed.users.some(pu => pu.id === u.id)) {
+              parsed.users.push(u);
+            }
+          });
+        }
+        return parsed;
+      }
     } catch (e) {
       console.warn('DB load failed, reinitializing defaults', e);
     }
@@ -346,6 +539,8 @@ class EcoCampusDB {
       marketplaceItems: createInitialMarketplace(),
       marketplaceClaims: createInitialClaims(),
       ecoPointsLedger: createInitialLedger(),
+      vault: createInitialVault(),
+      auctionLots: createInitialAuctionLots(),
       currentUserId: 'USR-001'
     };
     this.save(initial);
@@ -411,6 +606,7 @@ class EcoCampusDB {
   cleanBin(id) {
     return this.updateBin(id, {
       fillLevel: 5,
+      weightKg: 2.1,
       status: 'Cleaned',
       lastCleanedAt: 'Just now',
       uncleanedReportsCount: 0
@@ -637,6 +833,305 @@ class EcoCampusDB {
 
   getLedgerForUser(userId = this.getCurrentUser().id) {
     return this.data.ecoPointsLedger.filter(l => l.userId === userId);
+  }
+
+  // Vault & Treasury Methods
+  getVault() {
+    if (!this.data.vault) {
+      this.data.vault = createInitialVault();
+      this.save();
+    }
+    return this.data.vault;
+  }
+
+  redeemTokensForCash(userId, tokenAmount, paymentMethod = 'canteen_voucher', upiId = null) {
+    const user = this.getUserById(userId) || this.getCurrentUser();
+    const vault = this.getVault();
+
+    if (user.ecoPointsBalance < tokenAmount) {
+      return { success: false, error: `Insufficient EcoTokens. Balance: ${user.ecoPointsBalance}` };
+    }
+
+    const inrValue = Math.round(tokenAmount * (vault.exchangeRateInrPerToken || 0.50));
+    if (vault.breakdown.studentCanteenPoolInr < inrValue) {
+      return { success: false, error: 'Vault student payout reserve temporarily constrained.' };
+    }
+
+    // Deduct tokens
+    user.ecoPointsBalance -= tokenAmount;
+    vault.breakdown.studentCanteenPoolInr -= inrValue;
+    vault.totalCashInr -= inrValue;
+
+    const voucherCode = `IITR-${paymentMethod === 'upi' ? 'UPI' : 'NESCAFE'}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    vault.recentTransactions.unshift({
+      id: `VTX-${String(vault.recentTransactions.length + 1).padStart(2, '0')}`,
+      type: paymentMethod === 'upi' ? 'upi_disbursement' : 'canteen_voucher_redeem',
+      amountInr: inrValue,
+      description: `${user.name} redeemed ${tokenAmount} Tokens for ₹${inrValue} (${paymentMethod === 'upi' ? `UPI: ${upiId}` : 'Campus Canteen Coupon'})`,
+      timestamp: 'Just now'
+    });
+
+    this.data.ecoPointsLedger.unshift({
+      id: `LEDGER-${String(this.data.ecoPointsLedger.length + 1).padStart(3, '0')}`,
+      userId: user.id,
+      amount: -tokenAmount,
+      eventType: 'vault_cashout',
+      referenceId: voucherCode,
+      timestamp: 'Just now'
+    });
+
+    this.save();
+    return { success: true, inrValue, voucherCode };
+  }
+
+  donateTokensToFloodRelief(userId, tokenAmount) {
+    const user = this.getUserById(userId) || this.getCurrentUser();
+    const vault = this.getVault();
+
+    if (user.ecoPointsBalance < tokenAmount) {
+      return { success: false, error: `Insufficient EcoTokens. Balance: ${user.ecoPointsBalance}` };
+    }
+
+    const cashMatch = Math.round(tokenAmount * (vault.exchangeRateInrPerToken || 0.50));
+    
+    user.ecoPointsBalance -= tokenAmount;
+    vault.floodRelief.tokensDonated += tokenAmount;
+    vault.floodRelief.cashDisbursedInr += cashMatch;
+    vault.breakdown.disasterReliefReserveInr = Math.max(0, vault.breakdown.disasterReliefReserveInr - cashMatch);
+
+    const certId = `NSS-RELIEF-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    vault.recentTransactions.unshift({
+      id: `VTX-${String(vault.recentTransactions.length + 1).padStart(2, '0')}`,
+      type: 'flood_relief_disbursement',
+      amountInr: cashMatch,
+      description: `Donation: ${user.name} gave ${tokenAmount} Tokens matched to ₹${cashMatch} for Uttarakhand Relief`,
+      timestamp: 'Just now'
+    });
+
+    this.data.ecoPointsLedger.unshift({
+      id: `LEDGER-${String(this.data.ecoPointsLedger.length + 1).padStart(3, '0')}`,
+      userId: user.id,
+      amount: -tokenAmount,
+      eventType: 'flood_relief_donation',
+      referenceId: certId,
+      timestamp: 'Just now'
+    });
+
+    this.save();
+    return { success: true, cashMatch, certId };
+  }
+
+  // B2B Scrap Reverse Auction Methods
+  getAuctionLots() {
+    if (!this.data.auctionLots) {
+      this.data.auctionLots = createInitialAuctionLots();
+      this.save();
+    }
+    return this.data.auctionLots;
+  }
+
+  getAuctionLotById(id) {
+    return this.getAuctionLots().find(l => l.id === id);
+  }
+
+  placeBid(lotId, companyName, bidPerKg, bidderId = 'USR-004') {
+    const lots = this.getAuctionLots();
+    const lot = lots.find(l => l.id === lotId);
+    if (!lot) return { success: false, error: 'Lot not found' };
+    if (lot.status !== 'active') return { success: false, error: 'This tender auction has concluded' };
+
+    const parsedBid = parseFloat(bidPerKg);
+    if (parsedBid <= lot.currentHighestBid) {
+      return { success: false, error: `Bid must be higher than current leader (₹${lot.currentHighestBid}/kg)` };
+    }
+
+    lot.currentHighestBid = parsedBid;
+    lot.highestBidderName = companyName;
+    lot.highestBidderId = bidderId;
+    lot.bidCount = (lot.bidCount || 0) + 1;
+
+    lot.bids.unshift({
+      id: `BID-${Date.now().toString().slice(-4)}`,
+      bidder: companyName,
+      amountPerKg: parsedBid,
+      time: 'Just now'
+    });
+
+    this.save();
+    return { success: true, lot };
+  }
+
+  createAuctionLot({ title, category, weightKg, reservePricePerKg, durationHours, materialGrade, moisturePercent }) {
+    const lots = this.getAuctionLots();
+    const newId = `LOT-IITR-2026-W${String(lots.length + 42).padStart(2, '0')}`;
+    const hours = parseInt(durationHours) || 24;
+
+    const newLot = {
+      id: newId,
+      title: title || `${weightKg} kg Baled Scrap`,
+      category: category || 'recyclable',
+      materialGrade: materialGrade || 'Dry Baled Feedstock',
+      weightKg: parseFloat(weightKg) || 1000,
+      moisturePercent: moisturePercent || '< 5%',
+      baleDensity: '350 kg/m³',
+      pickupLocation: 'Central SWM Yard, Near Upper Ganga Canal, IIT Roorkee',
+      reservePricePerKg: parseFloat(reservePricePerKg) || 12.00,
+      currentHighestBid: parseFloat(reservePricePerKg) || 12.00,
+      highestBidderName: 'Reserve Price (Floor)',
+      highestBidderId: null,
+      bidCount: 0,
+      status: 'active',
+      durationHours: hours,
+      expiresAt: new Date(Date.now() + hours * 3600 * 1000).toISOString(),
+      bids: []
+    };
+
+    lots.unshift(newLot);
+    this.save();
+    return newLot;
+  }
+
+  closeAuctionLot(lotId) {
+    const lot = this.getAuctionLotById(lotId);
+    if (!lot) return null;
+
+    lot.status = 'awarded';
+    lot.awardedAt = 'Just now';
+    lot.gatePassNumber = `GP-IITR-2026-${Math.floor(100 + Math.random() * 900)}`;
+
+    const grossInr = Math.round(lot.weightKg * lot.currentHighestBid);
+    const vault = this.getVault();
+    vault.totalCashInr += grossInr;
+    vault.breakdown.studentCanteenPoolInr += Math.round(grossInr * 0.30);
+    vault.breakdown.workerUpiBonusPoolInr += Math.round(grossInr * 0.30);
+    vault.breakdown.equipmentMaintenanceInr += Math.round(grossInr * 0.25);
+    vault.breakdown.disasterReliefReserveInr += Math.round(grossInr * 0.15);
+
+    vault.recentTransactions.unshift({
+      id: `VTX-${String(vault.recentTransactions.length + 1).padStart(2, '0')}`,
+      type: 'auction_credit',
+      amountInr: grossInr,
+      description: `Tender Awarded: ${lot.title} to ${lot.highestBidderName} at ₹${lot.currentHighestBid}/kg`,
+      timestamp: 'Just now'
+    });
+
+    this.save();
+    return { lot, grossInr };
+  }
+
+  // Worker Verification & Anti-Griefing Methods
+  assignWorkerToComplaint(complaintId, workerId = 'USR-003') {
+    const complaint = this.getComplaintById(complaintId);
+    const worker = this.getUserById(workerId) || { name: 'Ramesh Kumar (Squad #2)' };
+    if (!complaint) return null;
+
+    complaint.status = 'in_progress';
+    complaint.assignedWorkerId = workerId;
+    complaint.assignedWorkerName = worker.name;
+    complaint.verificationStatus = 'assigned';
+
+    const dispatch = {
+      id: `DISP-${String(this.data.adminDispatches.length + 1).padStart(3, '0')}`,
+      complaintId: complaint.id,
+      messageText: `[Estate Office Dispatch] Assigned to ${worker.name}. Field verification in progress.`,
+      squadAssigned: worker.name,
+      sentAt: 'Just now',
+      isOneWay: true
+    };
+    this.data.adminDispatches.unshift(dispatch);
+
+    this.save();
+    return complaint;
+  }
+
+  reportFalseComplaint(complaintId, workerId, proofPhoto, remarks) {
+    const complaint = this.getComplaintById(complaintId);
+    if (!complaint) return null;
+
+    complaint.status = 'false_alarm';
+    complaint.verificationStatus = 'reported_false';
+    complaint.workerProofPhoto = proofPhoto || 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=500&q=80';
+    complaint.workerRemarks = remarks || 'Bin inspected. Completely clean and operational. False alarm reported.';
+    complaint.resolvedAt = 'Just now';
+
+    // Anti-griefing penalty: deduct 25 EcoTokens from offending student
+    const student = this.getUserById(complaint.userId);
+    if (student) {
+      const penalty = 25;
+      student.ecoPointsBalance = Math.max(0, student.ecoPointsBalance - penalty);
+      this.data.ecoPointsLedger.unshift({
+        id: `LEDGER-${String(this.data.ecoPointsLedger.length + 1).padStart(3, '0')}`,
+        userId: student.id,
+        amount: -penalty,
+        eventType: 'false_complaint_penalty',
+        referenceId: complaint.id,
+        timestamp: 'Just now'
+      });
+    }
+
+    const dispatch = {
+      id: `DISP-${String(this.data.adminDispatches.length + 1).padStart(3, '0')}`,
+      complaintId: complaint.id,
+      messageText: `[Estate SLA Alert] Complaint #${complaint.id} investigated by Sanitation Squad #2. Verified FALSE ALARM with photo proof. 25 EcoTokens deducted from reporter.`,
+      squadAssigned: 'Sanitation Squad #2 (Ramesh Kumar)',
+      sentAt: 'Just now',
+      isOneWay: true
+    };
+    this.data.adminDispatches.unshift(dispatch);
+
+    this.save();
+    return complaint;
+  }
+
+  verifyAndResolveComplaint(complaintId, workerId, cleanedPhoto, remarks) {
+    const complaint = this.getComplaintById(complaintId);
+    if (!complaint) return null;
+
+    complaint.status = 'resolved';
+    complaint.verificationStatus = 'verified_legitimate';
+    complaint.workerProofPhoto = cleanedPhoto || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500&q=80';
+    complaint.workerRemarks = remarks || 'Cleared and sanitized. Waste sorted into proper bags.';
+    complaint.resolvedAt = 'Just now';
+
+    if (complaint.binId) {
+      this.cleanBin(complaint.binId);
+    }
+
+    // Legitimate reward: award +35 EcoTokens to student
+    const student = this.getUserById(complaint.userId);
+    if (student) {
+      const reward = 35;
+      student.ecoPointsBalance += reward;
+      this.data.ecoPointsLedger.unshift({
+        id: `LEDGER-${String(this.data.ecoPointsLedger.length + 1).padStart(3, '0')}`,
+        userId: student.id,
+        amount: reward,
+        eventType: 'legitimate_complaint_reward',
+        referenceId: complaint.id,
+        timestamp: 'Just now'
+      });
+    }
+
+    // Worker bonus: add ₹150 to worker's weekly bonus tally
+    const worker = this.getUserById(workerId || 'USR-003');
+    if (worker) {
+      worker.weeklyBonusInr = (worker.weeklyBonusInr || 1250) + 150;
+    }
+
+    const dispatch = {
+      id: `DISP-${String(this.data.adminDispatches.length + 1).padStart(3, '0')}`,
+      complaintId: complaint.id,
+      messageText: `[Estate Office Resolution] Complaint #${complaint.id} resolved by Squad #2. Verified photo logged. Student rewarded +35 EcoTokens.`,
+      squadAssigned: 'Sanitation Squad #2 (Ramesh Kumar)',
+      sentAt: 'Just now',
+      isOneWay: true
+    };
+    this.data.adminDispatches.unshift(dispatch);
+
+    this.save();
+    return complaint;
   }
 }
 

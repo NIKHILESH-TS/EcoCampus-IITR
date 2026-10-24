@@ -94,6 +94,7 @@ export default function WasteClassifier() {
   const [selectedSample, setSelectedSample] = useState(CLASSIFICATION_CLASSES[0]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioLang, setAudioLang] = useState('hi'); // 'hi' | 'en'
   const [alertSubmitted, setAlertSubmitted] = useState(false);
 
   const handleSelectSample = (sample) => {
@@ -133,12 +134,15 @@ export default function WasteClassifier() {
       return;
     }
 
-    const textToSpeak = `This item is classified as ${selectedSample.name} with ${selectedSample.confidence} percent confidence. Please dispose it in the ${selectedSample.binColor}. It will be transported to ${selectedSample.collectionSquad}.`;
+    const textToSpeak = audioLang === 'hi'
+      ? `यह वस्तु ${selectedSample.name} के रूप में पहचानी गई है। कृपया इसे ${selectedSample.binColor} में डालें।`
+      : `This item is classified as ${selectedSample.name} with ${selectedSample.confidence} percent confidence. Please dispose it in the ${selectedSample.binColor}.`;
 
     speakText(
       textToSpeak,
       () => setIsSpeaking(true),
-      () => setIsSpeaking(false)
+      () => setIsSpeaking(false),
+      audioLang
     );
   };
 
@@ -266,23 +270,46 @@ export default function WasteClassifier() {
                 </div>
               </div>
 
-              {/* ElevenLabs Spoken Guidance Button */}
-              <button
-                type="button"
-                onClick={handleSpeakGuidance}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                  isSpeaking
-                    ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse'
-                    : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
-                }`}
-                title="Powered by ElevenLabs Voice AI"
-              >
-                {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-700" />}
-                <span>{isSpeaking ? 'Speaking (Stop)' : 'Hear Voice Guide'}</span>
-                <span className="text-[9px] bg-emerald-200/80 text-emerald-950 px-1 rounded font-mono">
-                  ElevenLabs
-                </span>
-              </button>
+              {/* ElevenLabs Spoken Guidance Button & Bilingual Toggle */}
+              <div className="flex items-center gap-1.5">
+                <div className="bg-slate-100 p-0.5 rounded-lg flex items-center border border-slate-200 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setAudioLang('hi')}
+                    className={`px-2 py-0.5 rounded font-medium ${
+                      audioLang === 'hi' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-600'
+                    }`}
+                  >
+                    हिन्दी
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAudioLang('en')}
+                    className={`px-2 py-0.5 rounded font-medium ${
+                      audioLang === 'en' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
+                    }`}
+                  >
+                    EN
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSpeakGuidance}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+                    isSpeaking
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse'
+                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                  title="Powered by ElevenLabs Voice AI"
+                >
+                  {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-700" />}
+                  <span>{isSpeaking ? 'Speaking' : 'Hear Guide'}</span>
+                  <span className="text-[9px] bg-emerald-200/80 text-emerald-950 px-1 rounded font-mono font-bold">
+                    11Labs
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* Smart Compartment Visual Indicator */}
