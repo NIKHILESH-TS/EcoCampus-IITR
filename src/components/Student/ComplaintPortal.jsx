@@ -281,11 +281,12 @@ export default function ComplaintPortal() {
                     <WasteBadge category={bin.category} />
                   </div>
 
-                  {/* Fill progress bar */}
+                  {/* Fill progress & Weight Bar */}
                   <div className="space-y-1 mb-2">
-                    <div className="flex justify-between text-[10px] text-slate-500">
-                      <span>Volume: {bin.fillLevel}%</span>
-                      <span>Next Shift: <strong>{bin.nextShiftTime}</strong></span>
+                    <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                      <span>Vol: <strong>{bin.fillLevel}%</strong></span>
+                      <span>Weight: <strong>{bin.weightKg || (bin.fillLevel * 0.35 + 2.5).toFixed(1)} kg</strong></span>
+                      <span>Shift: <strong className="text-slate-800">{bin.nextShiftTime}</strong></span>
                     </div>
                     <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                       <div 
@@ -376,6 +377,36 @@ export default function ComplaintPortal() {
                       <div className="font-medium text-slate-900">{item.issueType}</div>
                       {item.details && <p className="text-slate-600 text-[11px]">{item.details}</p>}
                     </div>
+
+                    {/* Verification & Anti-Griefing Outcome */}
+                    {item.verificationStatus === 'reported_false' && (
+                      <div className="bg-rose-50 border border-rose-200 rounded-lg p-2.5 space-y-1 text-rose-950">
+                        <div className="font-semibold text-rose-800 flex items-center justify-between">
+                          <span>⚠️ Verified False Alarm</span>
+                          <span className="font-mono font-bold text-[10px] bg-rose-200 text-rose-950 px-1.5 py-0.2 rounded">-25 TOKENS</span>
+                        </div>
+                        <p className="text-[11px] text-rose-700">
+                          Field crew inspected location and verified the bin was clean and operational. 25 EcoTokens were deducted to discourage false alarms.
+                        </p>
+                        {item.workerRemarks && (
+                          <div className="text-[10px] italic text-rose-600 bg-white/70 p-1.5 rounded">
+                            Field note: "{item.workerRemarks}"
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {item.verificationStatus === 'verified_legitimate' && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 space-y-1 text-emerald-950">
+                        <div className="font-semibold text-emerald-800 flex items-center justify-between">
+                          <span>✓ Verified Issue & Restored</span>
+                          <span className="font-mono font-bold text-[10px] bg-emerald-200 text-emerald-950 px-1.5 py-0.2 rounded">+35 TOKENS</span>
+                        </div>
+                        <p className="text-[11px] text-emerald-700">
+                          Thank you for keeping campus clean! Issue verified by Squad #2 and +35 EcoTokens added to your balance.
+                        </p>
+                      </div>
+                    )}
 
                     {/* One-Way Administrator Dispatches */}
                     {dispatches.length > 0 && (
@@ -489,9 +520,15 @@ export default function ComplaintPortal() {
                 />
               </div>
 
-              {/* Automatic Confirmation note */}
-              <div className="bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 text-[11px] text-emerald-900">
-                <strong>Automatic Confirmation:</strong> Submitting this issue instantly dispatches an official one-way acknowledgment from the Estate Office and credits <strong>+15 EcoPoints</strong>.
+              {/* Anti-griefing incentive notice */}
+              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                <div className="flex items-center justify-between text-slate-800 font-semibold">
+                  <span>Incentive & Anti-Spam Rule:</span>
+                  <span className="text-emerald-700 font-bold font-mono">+35 Pts on Clearance</span>
+                </div>
+                <p className="leading-snug">
+                  Submitting dispatches Squad #2 for inspection. Verified legitimate issues award <strong>+35 EcoTokens</strong>. To protect crew time, photo-verified false alarms incur a <strong>25 token penalty</strong>.
+                </p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">

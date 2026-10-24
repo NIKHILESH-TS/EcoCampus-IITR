@@ -328,7 +328,7 @@ export default function AdminPortal({ onOpenPrintQr }) {
 
                   {/* Verification Status Banner */}
                   {complaint.verificationStatus === 'reported_false' && (
-                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 space-y-1.5 text-rose-950">
+                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 space-y-2 text-rose-950">
                       <div className="flex items-center gap-1.5 font-semibold text-rose-800">
                         <ThumbsDown className="w-3.5 h-3.5" />
                         <span>Field Squad Confirmed False Alarm (Spam Prevention)</span>
@@ -336,6 +336,14 @@ export default function AdminPortal({ onOpenPrintQr }) {
                       <p className="text-[11px] text-rose-700">
                         Inspected by Ramesh Kumar. Bin was completely clean. <strong>25 EcoTokens deducted from student</strong> to protect system integrity.
                       </p>
+                      {complaint.workerProofPhoto && (
+                        <div className="flex items-center gap-2 bg-white/80 p-2 rounded border border-rose-200">
+                          <img src={complaint.workerProofPhoto} alt="Worker inspection proof" className="w-12 h-12 rounded object-cover border border-rose-200" />
+                          <div className="text-[10px] text-rose-900">
+                            <strong>Field Squad Evidence Photo:</strong> Verified clean & operational.
+                          </div>
+                        </div>
+                      )}
                       {complaint.workerRemarks && (
                         <div className="text-[10px] italic text-rose-600 bg-white/60 p-1.5 rounded">
                           Worker note: "{complaint.workerRemarks}"
@@ -345,7 +353,7 @@ export default function AdminPortal({ onOpenPrintQr }) {
                   )}
 
                   {complaint.verificationStatus === 'verified_legitimate' && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-1 text-emerald-950">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2 text-emerald-950">
                       <div className="flex items-center gap-1.5 font-semibold text-emerald-800">
                         <ThumbsUp className="w-3.5 h-3.5" />
                         <span>Ground Truth Verified & Restored</span>
@@ -353,6 +361,14 @@ export default function AdminPortal({ onOpenPrintQr }) {
                       <p className="text-[11px] text-emerald-700">
                         Student awarded <strong>+35 EcoTokens</strong> for legitimate reporting. Sanitation squad awarded <strong>₹150 weekly bonus</strong>.
                       </p>
+                      {complaint.workerProofPhoto && (
+                        <div className="flex items-center gap-2 bg-white/80 p-2 rounded border border-emerald-200">
+                          <img src={complaint.workerProofPhoto} alt="Worker resolution proof" className="w-12 h-12 rounded object-cover border border-emerald-200" />
+                          <div className="text-[10px] text-emerald-900">
+                            <strong>Field Squad Restoration Proof:</strong> Cleared and segregated.
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -426,6 +442,14 @@ export default function AdminPortal({ onOpenPrintQr }) {
                 </div>
               );
             })}
+
+            {complaints.length === 0 && (
+              <div className="bg-white rounded-xl border border-slate-200 p-12 text-center space-y-2">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
+                <h4 className="font-semibold text-slate-900 text-sm">Complaint Queue Clear</h4>
+                <p className="text-xs text-slate-500">No active complaints pending in the Govind Bhawan or campus beat.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -689,6 +713,12 @@ export default function AdminPortal({ onOpenPrintQr }) {
                   </div>
                 </div>
               ))}
+
+              {auctionLots.length === 0 && (
+                <div className="col-span-2 bg-slate-50 rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-500">
+                  No tender lots created yet. Click "+ Create New Scrap Lot" above to post the first consignment.
+                </div>
+              )}
             </div>
           </div>
         </div>

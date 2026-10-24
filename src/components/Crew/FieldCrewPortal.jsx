@@ -41,11 +41,16 @@ export default function FieldCrewPortal() {
   const [isAiSorterOpen, setIsAiSorterOpen] = useState(false);
   const [classifiedItem, setClassifiedItem] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [stopFilter, setStopFilter] = useState('all'); // 'all' | 'urgent'
 
   useEffect(() => {
     loadData();
     window.addEventListener('ecocampus_db_change', loadData);
-    return () => window.removeEventListener('ecocampus_db_change', loadData);
+    return () => {
+      stopSpeaking();
+      window.removeEventListener('ecocampus_db_change', loadData);
+    };
   }, []);
 
   const loadData = () => {
@@ -84,7 +89,7 @@ export default function FieldCrewPortal() {
     setToastMessage(msg);
 
     if (lang === 'hi') {
-      speakText(`डस्टबिन नंबर ${bin.id} खाली कर दिया गया है।`, () => {}, () => {}, 'hi');
+      speakText(`डस्टबिन नंबर ${bin.id} खाली कर दिया गया है।`, () => setIsSpeaking(true), () => setIsSpeaking(false), 'hi');
     }
   };
 
@@ -104,7 +109,7 @@ export default function FieldCrewPortal() {
     );
 
     if (lang === 'hi') {
-      speakText('गलत शिकायत दर्ज कर ली गई है। विद्यार्थी से पच्चीस टोकन काट लिए गए हैं।', () => {}, () => {}, 'hi');
+      speakText('गलत शिकायत दर्ज कर ली गई है। विद्यार्थी से पच्चीस टोकन काट लिए गए हैं।', () => setIsSpeaking(true), () => setIsSpeaking(false), 'hi');
     }
   };
 
@@ -124,7 +129,7 @@ export default function FieldCrewPortal() {
     );
 
     if (lang === 'hi') {
-      speakText('सफाई पूरी हो गई है। छात्र को पैंतीस टोकन और आपके खाते में बोनस जोड़ दिया गया है।', () => {}, () => {}, 'hi');
+      speakText('सफाई पूरी हो गई है। छात्र को पैंतीस टोकन और आपके खाते में बोनस जोड़ दिया गया है।', () => setIsSpeaking(true), () => setIsSpeaking(false), 'hi');
     }
   };
 
@@ -188,7 +193,7 @@ export default function FieldCrewPortal() {
 
       // Play bilingual audio
       const speech = lang === 'hi' ? classification.voiceHi : classification.voiceEn;
-      speakText(speech, () => {}, () => {}, lang);
+      speakText(speech, () => setIsSpeaking(true), () => setIsSpeaking(false), lang);
     }, 400);
   };
 
@@ -225,6 +230,19 @@ export default function FieldCrewPortal() {
           {/* Right Tools: Language Switcher & Bonus Counter */}
           <div className="flex flex-wrap items-center gap-3">
             
+            {/* Active Voice Waveform Pill */}
+            {isSpeaking && (
+              <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium shadow-xs">
+                <Volume2 className="w-3.5 h-3.5 text-emerald-600 animate-bounce" />
+                <span>Voice Active</span>
+                <span className="flex items-end gap-0.5 h-3.5">
+                  <span className="w-1 bg-emerald-600 h-2 animate-ping" />
+                  <span className="w-1 bg-emerald-600 h-3.5 animate-pulse" />
+                  <span className="w-1 bg-emerald-600 h-1.5 animate-ping" />
+                </span>
+              </div>
+            )}
+
             {/* Hindi / English Toggle */}
             <div className="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200 text-xs">
               <button
@@ -398,14 +416,42 @@ export default function FieldCrewPortal() {
         {/* Right Column: Scheduled Stops (TSP Optimized Route) */}
         <div className="lg:col-span-6 bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="font-semibold text-slate-800 text-xs">
-              {lang === 'hi' ? 'नियमित सफाई कार्य (रूट क्रम)' : 'Scheduled Clearance Stops (TSP Order)'}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-800 text-xs">
+                {lang === 'hi' ? 'नियमित सफाई कार्य (रूट क्रम)' : 'Scheduled Clearance Stops (TSP Order)'}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setStopFilter('all')}
+                  className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors ${
+                    stopFilter === 'all'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  All ({bins.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStopFilter('urgent')}
+                  className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors ${
+                    stopFilter === 'urgent'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                  }`}
+                >
+                  Urgent &gt;70% ({bins.filter(b => b.fillLevel > 70 || b.uncleanedReportsCount > 0).length})
+                </button>
+              </div>
+            </div>
             <span className="text-[10px] text-slate-400">Tractor Cart #2 Beat</span>
           </div>
 
           <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-            {bins.slice(0, 8).map((b, idx) => (
+            {bins
+              .filter(b => stopFilter === 'all' || b.fillLevel > 70 || b.uncleanedReportsCount > 0)
+              .slice(0, 10).map((b, idx) => (
               <div 
                 key={b.id}
                 className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex items-center justify-between text-xs hover:bg-slate-50 transition-colors"
@@ -422,7 +468,7 @@ export default function FieldCrewPortal() {
                     </div>
                     <div className="text-[11px] text-slate-500 mt-0.5">📍 {b.locationDetail}</div>
                     <div className="text-[10px] text-slate-400 mt-0.5">
-                      Weight: <strong>{b.weightKg || 12.4} kg</strong> • Shift: {b.nextShiftTime}
+                      Weight: <strong>{b.weightKg || (b.fillLevel * 0.35 + 2.5).toFixed(1)} kg</strong> • Shift: {b.nextShiftTime}
                     </div>
                   </div>
                 </div>
@@ -439,6 +485,18 @@ export default function FieldCrewPortal() {
                 </div>
               </div>
             ))}
+
+            {bins.filter(b => stopFilter === 'all' || b.fillLevel > 70 || b.uncleanedReportsCount > 0).length === 0 && (
+              <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500 space-y-1">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 mx-auto" />
+                <div className="font-semibold text-slate-800">
+                  {lang === 'hi' ? 'सभी तात्कालिक डस्टबिन खाली हैं!' : 'All Urgent Bins Cleared!'}
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  {lang === 'hi' ? 'अगला रूट 02:00 PM पर शुरू होगा।' : 'Next scheduled beat begins at 02:00 PM.'}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

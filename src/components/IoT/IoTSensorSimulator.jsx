@@ -18,7 +18,8 @@ import { db } from '../../services/db';
 
 export default function IoTSensorSimulator() {
   const [selectedBinId, setSelectedBinId] = useState('GB-042');
-  const [fillPercent, setFillPercent] = useState(88);
+  const [fillPercent, setFillPercent] = useState(82);
+  const [customWeightKg, setCustomWeightKg] = useState(24.5);
   const [activeTab, setActiveTab] = useState('gauges'); // 'gauges' | 'telemetry_json' | 'firmware_code'
   const [autoInterruptFired, setAutoInterruptFired] = useState(false);
   const [lastInterruptMsg, setLastInterruptMsg] = useState(null);
@@ -26,20 +27,27 @@ export default function IoTSensorSimulator() {
   // Derived physical sensor values
   const totalBinHeightCm = 100;
   const measuredDistanceCm = Math.max(8, Math.round(totalBinHeightCm * (1 - fillPercent / 100)));
-  const measuredWeightKg = +(2.1 + (fillPercent * 0.26)).toFixed(1);
+  const measuredWeightKg = customWeightKg;
   const batteryVoltage = +(3.7 + (100 - fillPercent) * 0.004).toFixed(2);
   const wifiRssi = -64 + Math.round((fillPercent % 5));
 
   const bin = db.getBinById(selectedBinId) || db.getBins()[0];
 
+  // Sensor Fusion Heuristic: Apparent Bulk Density (g / cm³)
+  // Standard dry paper density: ~0.15 - 0.30 g/cm3; Wet food: >0.85 g/cm3
+  const volumeLiters = Math.max(5, (fillPercent / 100) * 80); // 80L bin
+  const apparentDensity = +(measuredWeightKg / volumeLiters).toFixed(2);
+  const isContaminated = (bin.category === 'recyclable' || bin.category === 'non_recyclable') && apparentDensity > 0.65;
+
   useEffect(() => {
-    // If fill level crosses 80%, simulate hardware edge interrupt
-    if (fillPercent >= 80 && !autoInterruptFired) {
+    // If fill level crosses 80% OR weight exceeds 35kg, simulate edge interrupt
+    const isOverLimit = fillPercent >= 80 || measuredWeightKg >= 35;
+    if (isOverLimit && !autoInterruptFired) {
       triggerHardwareInterrupt();
-    } else if (fillPercent < 80) {
+    } else if (!isOverLimit) {
       setAutoInterruptFired(false);
     }
-  }, [fillPercent]);
+  }, [fillPercent, measuredWeightKg]);
 
   const triggerHardwareInterrupt = () => {
     setAutoInterruptFired(true);
@@ -47,25 +55,35 @@ export default function IoTSensorSimulator() {
     // Update bin state in database
     db.updateBin(bin.id, {
       fillLevel: fillPercent,
-      status: 'Overflowing'
+      weightKg: measuredWeightKg,
+      status: fillPercent >= 80 ? 'Overflowing' : 'Needs Attention'
     });
 
-    // Auto-create hardware interrupt complaint in db
-    const res = db.createComplaint({
+    const triggerReason = measuredWeightKg >= 35
+      ? `HEAVY_LOAD_ERGONOMIC_ALERT: Weight reached ${measuredWeightKg}kg (>35kg safe threshold)`
+      : `HIGH_VOLUME_ALERT: Ultrasonic distance dropped to ${measuredDistanceCm}cm (${fillPercent}% full)`;
+
+    db.createComplaint({
       binId: bin.id,
       locationText: bin.locationDetail,
       category: bin.category,
-      issueType: `IOT_EDGE_INTERRUPT: Bin ${bin.id} exceeded 80% threshold (${fillPercent}% full, ${measuredWeightKg}kg)`,
-      details: `Triggered by ESP32 ultrasonic echo = ${measuredDistanceCm}cm, HX711 load = ${measuredWeightKg}kg. Urgent pickup scheduled.`
+      issueType: `IOT_EDGE_TRIGGER: Bin #${bin.id} fired dispatch interrupt`,
+      details: `${triggerReason}. Apparent Density: ${apparentDensity} kg/L. Assigned for priority tractor collection.`
     });
 
-    setLastInterruptMsg(`[ESP32 Hardware Interrupt] Bin #${bin.id} fired threshold alert. Distance: ${measuredDistanceCm}cm, Load: ${measuredWeightKg}kg. Transmitted via MQTT to Admin Queue.`);
+    setLastInterruptMsg(`[ESP32 Edge Trigger] Bin #${bin.id}: ${triggerReason}. Sent via MQTT to Admin Queue.`);
   };
 
-  const handleSliderChange = (e) => {
+  const handleFillSlider = (e) => {
     const val = parseInt(e.target.value);
     setFillPercent(val);
     db.updateBin(bin.id, { fillLevel: val });
+  };
+
+  const handleWeightSlider = (e) => {
+    const val = parseFloat(e.target.value);
+    setCustomWeightKg(val);
+    db.updateBin(bin.id, { weightKg: val });
   };
 
   const telemetryJson = {
@@ -247,22 +265,82 @@ void loop() {
               </span>
             </div>
 
-            {/* Slider */}
-            <div className="space-y-1">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={fillPercent}
-                onChange={handleSliderChange}
-                className="w-full accent-emerald-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                <span>0% (Empty: 100cm)</span>
-                <span>50% (Normal: 55cm)</span>
-                <span className="text-rose-600 font-bold">80% Threshold</span>
-                <span>100% (Overflow: 8cm)</span>
+            {/* Dual Sensor Controls: Height & Weight */}
+            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+              
+              {/* Ultrasonic Slider */}
+              <div className="space-y-1">
+                <div className="flex justify-between font-medium text-slate-700">
+                  <span>1. Ultrasonic Fill Depth (Volume):</span>
+                  <span className="font-mono font-bold text-slate-900">{fillPercent}% ({measuredDistanceCm}cm)</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={fillPercent}
+                  onChange={handleFillSlider}
+                  className="w-full accent-emerald-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                  <span>0% (Empty)</span>
+                  <span className="text-amber-600">60%</span>
+                  <span className="text-rose-600 font-bold">&gt;80% Interrupt</span>
+                  <span>100% (Full)</span>
+                </div>
               </div>
+
+              {/* Load Cell Slider */}
+              <div className="space-y-1 pt-2 border-t border-slate-200">
+                <div className="flex justify-between font-medium text-slate-700">
+                  <span>2. HX711 Load Cell Mass (Weight):</span>
+                  <span className="font-mono font-bold text-slate-900">{measuredWeightKg} kg</span>
+                </div>
+                <input
+                  type="range"
+                  min="2"
+                  max="45"
+                  step="0.5"
+                  value={measuredWeightKg}
+                  onChange={handleWeightSlider}
+                  className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                  <span>2.0 kg (Tare)</span>
+                  <span>18.0 kg (Normal)</span>
+                  <span className="text-rose-600 font-bold">&gt;35 kg Heavy Ergonomic Alert</span>
+                  <span>45.0 kg (Max)</span>
+                </div>
+              </div>
+
+              {/* Sensor Fusion Density & Contamination Check */}
+              <div className={`p-3 rounded-lg border flex items-center justify-between text-xs transition-colors ${
+                isContaminated 
+                  ? 'bg-rose-50 border-rose-300 text-rose-950 animate-pulse'
+                  : 'bg-white border-slate-200 text-slate-700'
+              }`}>
+                <div>
+                  <div className="font-semibold flex items-center gap-1.5">
+                    <Activity className={`w-3.5 h-3.5 ${isContaminated ? 'text-rose-600' : 'text-emerald-600'}`} />
+                    <span>Apparent Bulk Density: <strong className="font-mono">{apparentDensity} kg/L</strong></span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">
+                    {isContaminated 
+                      ? '⚠️ ANOMALY: Heavy wet muck detected in dry recyclable paper bin!'
+                      : 'Sensor fusion values within expected material distribution.'
+                    }
+                  </div>
+                </div>
+
+                <span className={`font-mono text-[10px] px-2 py-0.5 rounded font-bold ${
+                  isContaminated 
+                    ? 'bg-rose-200 text-rose-900' 
+                    : 'bg-emerald-100 text-emerald-800'
+                }`}>
+                  {isContaminated ? 'CONTAMINATION ALERT' : 'STREAM PURITY PASS'}
+                </span>
+              </div>
+
             </div>
 
             {/* Visual Physical Bin Cross Section */}

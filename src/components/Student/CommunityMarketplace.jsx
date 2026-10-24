@@ -31,6 +31,7 @@ export default function CommunityMarketplace() {
   const [user, setUser] = useState(db.getCurrentUser());
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'price_low' | 'price_high' | 'free_first'
   const [searchQuery, setSearchQuery] = useState('');
 
   // Add Item Modal
@@ -59,15 +60,35 @@ export default function CommunityMarketplace() {
   // Live algorithmic score calculation
   const calculatedPoints = db.calculateItemPoints(newCategory, newCondition, isFree);
 
-  const filteredItems = items.filter(item => {
-    const matchCat = filterCategory === 'All' || item.category === filterCategory;
-    const matchStatus = filterStatus === 'All' || item.status === filterStatus;
-    const matchSearch = searchQuery === '' ||
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.sellerRoom.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchStatus && matchSearch;
-  });
+  const filteredItems = items
+    .filter(item => {
+      const matchCat = filterCategory === 'All' || item.category === filterCategory;
+      const matchStatus = filterStatus === 'All' || item.status === filterStatus;
+      const matchSearch = searchQuery === '' ||
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.sellerRoom.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchStatus && matchSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price_low') {
+        const pA = a.isFree ? 0 : a.ecoPointsPrice;
+        const pB = b.isFree ? 0 : b.ecoPointsPrice;
+        return pA - pB;
+      }
+      if (sortBy === 'price_high') {
+        const pA = a.isFree ? 0 : a.ecoPointsPrice;
+        const pB = b.isFree ? 0 : b.ecoPointsPrice;
+        return pB - pA;
+      }
+      if (sortBy === 'free_first') {
+        if (a.isFree && !b.isFree) return -1;
+        if (!a.isFree && b.isFree) return 1;
+        return 0;
+      }
+      // default: newest
+      return (b.id || '').localeCompare(a.id || '');
+    });
 
   const handlePostItem = (e) => {
     e.preventDefault();
@@ -189,6 +210,17 @@ export default function CommunityMarketplace() {
           <option value="claimed">Claimed</option>
         </select>
 
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="p-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 font-medium"
+        >
+          <option value="newest">Sort: Newest First</option>
+          <option value="free_first">Sort: Free Items First</option>
+          <option value="price_low">Sort: EcoPoints (Low to High)</option>
+          <option value="price_high">Sort: EcoPoints (High to Low)</option>
+        </select>
+
       </div>
 
       {/* Marketplace Catalog Grid */}
@@ -217,8 +249,14 @@ export default function CommunityMarketplace() {
                   </div>
 
                   <div className="absolute bottom-2 left-2">
-                    <span className="text-[10px] font-medium bg-white/90 text-slate-800 px-2 py-0.5 rounded border border-slate-200 backdrop-blur-xs">
-                      {item.condition.toUpperCase()}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded shadow-xs uppercase tracking-wider ${
+                      item.condition === 'mint' 
+                        ? 'bg-emerald-600 text-white' 
+                        : item.condition === 'good'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-amber-600 text-white'
+                    }`}>
+                      {item.condition}
                     </span>
                   </div>
                 </div>
@@ -271,8 +309,26 @@ export default function CommunityMarketplace() {
       </div>
 
       {filteredItems.length === 0 && (
-        <div className="text-center py-12 text-xs text-slate-400 bg-white rounded-xl border border-slate-200">
-          No items found matching the selected filters.
+        <div className="text-center py-12 px-4 bg-white rounded-xl border border-slate-200 space-y-3">
+          <div className="w-10 h-10 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+            <Search className="w-5 h-5" />
+          </div>
+          <h4 className="font-semibold text-slate-900 text-sm">No marketplace items found</h4>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            No active listings match your current filters. Try searching with different keywords or reset filters.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setFilterCategory('All');
+              setFilterStatus('All');
+              setSortBy('newest');
+            }}
+            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+          >
+            Reset All Filters
+          </button>
         </div>
       )}
 
