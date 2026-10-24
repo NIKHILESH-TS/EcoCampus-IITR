@@ -68,11 +68,20 @@ export default function App() {
 
           <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400">
             <a
-              href="/EcoCampus_IITR_SOCIOTHON_2026.pptx"
-              download="EcoCampus_IITR_SOCIOTHON_2026.pptx"
+              href="/pitch-deck.html"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1"
             >
-              <span>Download Pitch Deck (.pptx)</span>
+              <span>Open Interactive Pitch Deck (HTML)</span>
+            </a>
+            <span>•</span>
+            <a
+              href="/pitch-deck.html"
+              download="EcoCampus_IITR_Pitch_Deck.html"
+              className="text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1"
+            >
+              <span>Download HTML Deck</span>
             </a>
             <span>•</span>
             <button

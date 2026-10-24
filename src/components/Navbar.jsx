@@ -9,7 +9,8 @@ import {
   Truck,
   Landmark,
   Building2,
-  ChevronDown
+  ChevronDown,
+  Presentation
 } from 'lucide-react';
 import { db } from '../services/db';
 
@@ -99,6 +100,18 @@ export default function Navbar({
         {/* Right: Minimalist Action Controls (Mobile-Safe) */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           
+          {/* Interactive HTML Pitch Deck Button (Desktop/Tablet) */}
+          <a
+            href="/pitch-deck.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-xs font-semibold transition-colors cursor-pointer"
+            title="Open Interactive 9-Slide HTML Pitch Deck & Speaker Script"
+          >
+            <Presentation className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Pitch Deck</span>
+          </a>
+
           {/* Vault Balance Pill (Desktop/Tablet) */}
           <button
             type="button"
